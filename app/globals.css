@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --gradient-glow: radial-gradient(circle at 50% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%);
+  }
+
+  body {
+    @apply bg-black text-white antialiased;
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .gradient-accent {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  }
+
+  /* Glow effects */
+  .glow-purple {
+    background: radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+  }
+
+  .glow-blue {
+    background: radial-gradient(circle at 50% 50%, rgba(79, 172, 254, 0.15) 0%, transparent 70%);
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
+  }
+
+  .text-gradient-blue {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400;
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-white bg-opacity-5 backdrop-blur-lg border border-white border-opacity-10;
+  }
+
+  .glass-dark {
+    @apply bg-gray-900 bg-opacity-50 backdrop-blur-xl border border-gray-700 border-opacity-50;
+  }
+
+  /* Bento grid */
+  .bento-grid {
+    @apply grid gap-4 md:gap-6;
+  }
+
+  /* Animation utilities */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 4s ease-in-out infinite alternate;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
