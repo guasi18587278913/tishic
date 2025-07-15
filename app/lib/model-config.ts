@@ -10,6 +10,7 @@ export const MODEL_CONFIGS = {
     cost: '$15/$75 per M tokens',
     qualityScore: 10,
     speedScore: 5,
+    maxTokens: 32000, // Claude Opus 4 支持更长的输出
   },
   
   'claude-3-sonnet': {
@@ -165,4 +166,10 @@ export function recommendModel({
 // 获取模型信息
 export function getModelInfo(modelId: string) {
   return Object.values(MODEL_CONFIGS).find(m => m.id === modelId)
+}
+
+// 获取模型的最大 token 数
+export function getModelMaxTokens(modelId: string): number {
+  const model = Object.values(MODEL_CONFIGS).find(m => m.id === modelId)
+  return model?.maxTokens || 16000 // 默认 16000
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { analyzePromptType, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
-import { getUserPreferredModel } from '@/app/lib/model-config'
+import { getUserPreferredModel, getModelMaxTokens } from '@/app/lib/model-config'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         const requestBody = {
           model: modelToUse,
           messages: [{ role: 'user', content: optimizationPrompt }],
-          max_tokens: 8000, // 增加到 8000 以支持更长的输出
+          max_tokens: getModelMaxTokens(modelToUse), // 根据模型动态设置
           temperature: 0.7,
           stream: true, // 启用流式输出
         }
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         console.log('API Request:', {
           url: 'https://openrouter.ai/api/v1/chat/completions',
           model: modelToUse,
+          maxTokens: getModelMaxTokens(modelToUse),
           messageLength: optimizationPrompt.length
         })
         
