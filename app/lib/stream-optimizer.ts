@@ -115,7 +115,9 @@ export class StreamConnectionPool {
     // 如果连接池满了，关闭最旧的连接
     if (this.connections.size >= this.maxConnections) {
       const oldestId = this.connections.keys().next().value
-      this.close(oldestId)
+      if (oldestId !== undefined) {
+        this.close(oldestId)
+      }
     }
 
     const controller = new AbortController()
