@@ -1,4 +1,4 @@
-import { CURRENT_MODEL } from './model-config'
+import { getUserPreferredModel } from './model-config'
 
 interface OpenRouterMessage {
   role: 'user' | 'assistant' | 'system'
@@ -23,7 +23,7 @@ export class OpenRouterAPI {
 
   constructor(apiKey: string, model?: string) {
     this.apiKey = apiKey
-    this.model = model || CURRENT_MODEL
+    this.model = model || getUserPreferredModel()
   }
 
   async sendMessage(messages: OpenRouterMessage[], options?: { model?: string }): Promise<string> {

@@ -1,4 +1,4 @@
-import { CURRENT_MODEL } from './model-config'
+import { getUserPreferredModel } from './model-config'
 
 export async function* streamCompletion(
   messages: Array<{ role: string; content: string }>,
@@ -14,7 +14,7 @@ export async function* streamCompletion(
       'X-Title': 'Prompt Optimizer',
     },
     body: JSON.stringify({
-      model: model || CURRENT_MODEL,
+      model: model || getUserPreferredModel(),
       messages,
       max_tokens: 4000,
       temperature: 0.7,
