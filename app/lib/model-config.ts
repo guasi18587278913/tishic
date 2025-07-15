@@ -63,16 +63,6 @@ export const MODEL_CONFIGS = {
     speedScore: 6,
   },
   
-  // Claude 系列
-  'claude-3-opus': {
-    id: 'anthropic/claude-3-opus',
-    name: 'Claude 3 Opus',
-    description: '强大推理，适合专业场景',
-    speed: '较慢',
-    cost: '$15/$75 per M tokens',
-    qualityScore: 9,
-    speedScore: 3,
-  },
   
   'claude-3-haiku': {
     id: 'anthropic/claude-3-haiku',
