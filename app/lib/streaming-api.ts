@@ -10,7 +10,7 @@ export async function* streamCompletion(
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://prompt-optimizer.vercel.app',
+      'HTTP-Referer': 'https://tishic.netlify.app',
       'X-Title': 'Prompt Optimizer',
     },
     body: JSON.stringify({
