@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { OptimizationDimensions } from '../types'
+import SegmentedPromptDisplay from './SegmentedPromptDisplay'
 
 interface OptimizedResultProps {
   result: string
@@ -65,16 +66,14 @@ export default function OptimizedResult({ result, originalPrompt, dimensions }: 
             </button>
           </div>
           <div className="relative">
-            <div ref={scrollRef} className="max-h-96 overflow-y-auto custom-scrollbar rounded-lg pr-2">
-              <pre className="whitespace-pre-wrap text-gray-100 leading-relaxed font-sans text-[15px] p-2">{result}</pre>
-            </div>
-            {/* Scroll indicator */}
-            {isScrollable && (
-              <div className="absolute bottom-2 right-4 text-gray-500 text-xs flex items-center gap-1 animate-pulse">
-                <i className="fas fa-mouse text-xs"></i>
-                <span>滚动查看更多</span>
-              </div>
-            )}
+            <SegmentedPromptDisplay 
+              content={result}
+              isStreaming={false}
+              onRetrySegment={(segmentTitle) => {
+                console.log('Retry segment:', segmentTitle)
+                // TODO: 实现重新生成特定段落的功能
+              }}
+            />
           </div>
         </div>
       </div>

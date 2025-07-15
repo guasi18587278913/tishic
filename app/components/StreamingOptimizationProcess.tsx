@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { OptimizationState } from '../types'
+import SegmentedPromptDisplay from './SegmentedPromptDisplay'
 
 interface StreamingOptimizationProcessProps {
   state: OptimizationState
@@ -196,14 +197,16 @@ export default function StreamingOptimizationProcess({
         </div>
       </div>
 
-      <div className="bg-gray-900/50 rounded-xl p-6 max-h-96 overflow-y-auto border border-gray-800">
+      <div className="bg-gray-900/50 rounded-xl p-6 max-h-[600px] overflow-y-auto border border-gray-800">
         {displayContent ? (
-          <pre className="whitespace-pre-wrap text-gray-100 leading-relaxed font-sans transition-all duration-75">
-            {displayContent}
-            {isStreaming && displayIndexRef.current < streamedContent.length && (
-              <span className="inline-block w-0.5 h-5 bg-teal-400 animate-pulse ml-0.5" />
-            )}
-          </pre>
+          <SegmentedPromptDisplay 
+            content={displayContent}
+            isStreaming={isStreaming}
+            onRetrySegment={(segmentTitle) => {
+              console.log('Retry segment:', segmentTitle)
+              // TODO: 实现重试特定段落的功能
+            }}
+          />
         ) : (
           <div className="text-center py-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
