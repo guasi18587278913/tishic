@@ -221,7 +221,7 @@ export default function StreamingOptimizationProcess({
         <div className="flex items-start gap-2">
           <i className="fas fa-info-circle text-teal-400 text-sm mt-0.5"></i>
           <p className="text-xs text-gray-400 leading-relaxed">
-            <strong>流式响应已启用</strong> - Claude Opus 4 正在深度思考并实时显示结果
+            <strong>流式响应已启用</strong> - Gemini 2.5 Pro 正在快速生成并实时显示结果
           </p>
         </div>
       </div>
