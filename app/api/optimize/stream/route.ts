@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         const requestBody = {
           model: modelToUse,
           messages: [{ role: 'user', content: optimizationPrompt }],
-          max_tokens: 4000,
+          max_tokens: 8000, // 增加到 8000 以支持更长的输出
           temperature: 0.7,
           stream: true, // 启用流式输出
         }

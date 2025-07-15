@@ -43,7 +43,7 @@ export class OpenRouterAPI {
           body: JSON.stringify({
             model: options?.model || this.model,
             messages,
-            max_tokens: 4000,
+            max_tokens: 8000, // 增加输出长度限制
             temperature: 0.7,
           }),
         })
