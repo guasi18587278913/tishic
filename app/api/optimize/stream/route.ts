@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { analyzePromptType, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
-import { CURRENT_MODEL } from '@/app/lib/model-config'
+import { getUserPreferredModel } from '@/app/lib/model-config'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
             'X-Title': 'Prompt Optimizer',
           },
           body: JSON.stringify({
-            model: CURRENT_MODEL,
+            model: body.model || getUserPreferredModel(),
             messages: [{ role: 'user', content: optimizationPrompt }],
             max_tokens: 4000,
             temperature: 0.7,

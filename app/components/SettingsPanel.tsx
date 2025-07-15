@@ -7,6 +7,11 @@ import {
   getUserTransitionPreference,
   saveUserTransitionPreference
 } from '../lib/transition-effects'
+import { 
+  MODEL_CONFIGS, 
+  getUserPreferredModel, 
+  saveUserPreferredModel 
+} from '../lib/model-config'
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -24,6 +29,8 @@ export default function SettingsPanel({
   const [selectedTransition, setSelectedTransition] = useState<TransitionEffect>('fade')
   const [showPreview, setShowPreview] = useState(false)
   const [autoSave, setAutoSave] = useState(true)
+  const [selectedModel, setSelectedModel] = useState('')
+  const [modelPriority, setModelPriority] = useState<'quality' | 'speed' | 'balanced'>('balanced')
 
   useEffect(() => {
     setSelectedTransition(getUserTransitionPreference())
@@ -31,6 +38,11 @@ export default function SettingsPanel({
     // 读取自动保存设置
     const savedAutoSave = localStorage.getItem('auto-save-progress')
     setAutoSave(savedAutoSave !== 'false')
+    
+    // 读取模型设置
+    setSelectedModel(getUserPreferredModel())
+    const savedPriority = localStorage.getItem('model-priority') as any
+    setModelPriority(savedPriority || 'balanced')
   }, [])
 
   const handleTransitionChange = (effect: TransitionEffect) => {
@@ -99,6 +111,110 @@ export default function SettingsPanel({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* 模型选择 */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <i className="fas fa-brain text-teal-400"></i>
+              AI 模型
+            </h3>
+            
+            {/* 优先级选择 */}
+            <div className="mb-4">
+              <label className="text-sm text-gray-400 mb-2 block">优化优先级</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    setModelPriority('quality')
+                    localStorage.setItem('model-priority', 'quality')
+                  }}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    modelPriority === 'quality'
+                      ? 'border-teal-500 bg-teal-500/10'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
+                  <i className="fas fa-gem mb-1 block"></i>
+                  <div className="text-sm">质量优先</div>
+                </button>
+                <button
+                  onClick={() => {
+                    setModelPriority('speed')
+                    localStorage.setItem('model-priority', 'speed')
+                  }}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    modelPriority === 'speed'
+                      ? 'border-teal-500 bg-teal-500/10'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
+                  <i className="fas fa-bolt mb-1 block"></i>
+                  <div className="text-sm">速度优先</div>
+                </button>
+                <button
+                  onClick={() => {
+                    setModelPriority('balanced')
+                    localStorage.setItem('model-priority', 'balanced')
+                  }}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    modelPriority === 'balanced'
+                      ? 'border-teal-500 bg-teal-500/10'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
+                  <i className="fas fa-balance-scale mb-1 block"></i>
+                  <div className="text-sm">平衡</div>
+                </button>
+              </div>
+            </div>
+            
+            {/* 模型列表 */}
+            <div className="space-y-2">
+              {Object.entries(MODEL_CONFIGS).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setSelectedModel(config.id)
+                    saveUserPreferredModel(config.id)
+                  }}
+                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                    selectedModel === config.id
+                      ? 'border-teal-500 bg-teal-500/10'
+                      : 'border-gray-700 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        {config.name}
+                        {config.qualityScore >= 9 && (
+                          <span className="text-xs px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">高质量</span>
+                        )}
+                        {config.speedScore >= 9 && (
+                          <span className="text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">快速</span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1">{config.description}</div>
+                      <div className="text-xs text-gray-500 mt-2 flex items-center gap-4">
+                        <span>速度: {config.speed}</span>
+                        <span>成本: {config.cost}</span>
+                      </div>
+                    </div>
+                    {selectedModel === config.id && (
+                      <i className="fas fa-check-circle text-teal-400"></i>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+              <div className="text-sm text-gray-400">
+                <i className="fas fa-info-circle mr-2"></i>
+                根据您的需求选择合适的模型。质量优先适合专业场景，速度优先适合快速迭代。
+              </div>
+            </div>
           </div>
 
           {/* 流式输出 */}
