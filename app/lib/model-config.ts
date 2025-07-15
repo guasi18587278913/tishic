@@ -30,7 +30,8 @@ export const MODEL_CONFIGS = {
 }
 
 // 当前使用的模型（可以在这里切换）
-export const CURRENT_MODEL = MODEL_CONFIGS['claude-opus-4'].id
+// 使用平衡模型以避免卡顿
+export const CURRENT_MODEL = MODEL_CONFIGS['claude-3.7-sonnet'].id
 
 // 根据任务复杂度自动选择模型
 export function selectModelByComplexity(promptLength: number, questionCount: number) {

@@ -15,6 +15,7 @@ export default function StreamingOptimizationProcess({
   const [streamedContent, setStreamedContent] = useState('')
   const [displayContent, setDisplayContent] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   const displayIndexRef = useRef(0)
   const animationFrameRef = useRef<number | null>(null)
 
@@ -49,61 +50,106 @@ export default function StreamingOptimizationProcess({
   const startStreaming = async () => {
     setIsStreaming(true)
     let fullContent = ''
+    const abortController = new AbortController()
+    let retryCount = 0
+    const maxRetries = 3
 
-    try {
-      const response = await fetch('/api/optimize/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          originalPrompt: state.originalPrompt,
-          promptType: state.promptType,
-          answers: state.answers,
-        }),
-      })
+    const attemptStream = async (): Promise<void> => {
+      try {
+        setConnectionStatus('connecting')
+        const response = await fetch('/api/optimize/stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            originalPrompt: state.originalPrompt,
+            promptType: state.promptType,
+            answers: state.answers,
+          }),
+          signal: abortController.signal,
+        })
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        
+        setConnectionStatus('connected')
 
-      if (!reader) throw new Error('No reader available')
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+        if (!reader) throw new Error('No reader available')
 
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
+        let buffer = ''
+        
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              // Ensure all content is displayed before completing
-              setStreamedContent(fullContent)
-              setDisplayContent(fullContent)
-              displayIndexRef.current = fullContent.length
-              setTimeout(() => onComplete(fullContent), 500)
-              return
-            }
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
 
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.content) {
-                fullContent += parsed.content
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim()
+              if (data === '[DONE]') {
+                // Ensure all content is displayed before completing
                 setStreamedContent(fullContent)
+                setDisplayContent(fullContent)
+                displayIndexRef.current = fullContent.length
+                setTimeout(() => onComplete(fullContent), 500)
+                return
               }
-            } catch (e) {
-              // 忽略解析错误
+
+              if (data) {
+                try {
+                  const parsed = JSON.parse(data)
+                  if (parsed.content) {
+                    fullContent += parsed.content
+                    setStreamedContent(fullContent)
+                  } else if (parsed.error) {
+                    throw new Error(parsed.error)
+                  } else if (parsed.warning) {
+                    console.warn('Stream warning:', parsed.warning)
+                  }
+                } catch (e) {
+                  if (e instanceof SyntaxError) {
+                    console.error('JSON parse error:', e, 'Data:', data)
+                  } else {
+                    throw e
+                  }
+                }
+              }
             }
           }
         }
+      } catch (error) {
+        console.error('Streaming error:', error)
+        
+        // 如果是网络错误且还有重试次数，进行重试
+        if (retryCount < maxRetries && !abortController.signal.aborted) {
+          retryCount++
+          console.log(`Retrying stream... (${retryCount}/${maxRetries})`)
+          
+          // 指数退避
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000))
+          
+          // 重试
+          return attemptStream()
+        }
+        
+        // 最终失败，显示错误
+        setConnectionStatus('error')
+        setStreamedContent('优化过程中出现错误，请重试。错误信息：' + (error instanceof Error ? error.message : 'Unknown error'))
+        setDisplayContent('优化过程中出现错误，请重试。错误信息：' + (error instanceof Error ? error.message : 'Unknown error'))
+      } finally {
+        setIsStreaming(false)
       }
-    } catch (error) {
-      console.error('Streaming error:', error)
-    } finally {
-      setIsStreaming(false)
     }
+
+    await attemptStream()
   }
 
   if (state.stage !== 'optimizing') return null
@@ -118,12 +164,26 @@ export default function StreamingOptimizationProcess({
             </div>
             <h3 className="text-xl font-semibold text-white">正在优化中</h3>
           </div>
-          {isStreaming && (
-            <div className="flex items-center text-sm text-teal-400">
-              <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse mr-2"></div>
-              实时生成中
-            </div>
-          )}
+          <div className="flex items-center text-sm">
+            {connectionStatus === 'connecting' && (
+              <>
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse mr-2"></div>
+                <span className="text-yellow-400">正在连接...</span>
+              </>
+            )}
+            {connectionStatus === 'connected' && isStreaming && (
+              <>
+                <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse mr-2"></div>
+                <span className="text-teal-400">实时生成中</span>
+              </>
+            )}
+            {connectionStatus === 'error' && (
+              <>
+                <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                <span className="text-red-400">连接异常</span>
+              </>
+            )}
+          </div>
         </div>
         <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
           <div 
