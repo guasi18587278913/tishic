@@ -2,14 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { analyzePromptType, generateQuestions, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { enhancedCache } from '@/app/lib/enhanced-cache'
+import { validateAnalyzeRequest, validateOptimizeRequest, ValidationException } from '@/app/lib/validation'
+import { getGoogleApiKey, logEnvInfo } from '@/app/lib/env-validation'
 
 export async function POST(request: NextRequest) {
   try {
     // 检查是否是预热请求
     const isWarmupRequest = request.headers.get('X-Warmup-Request') === 'true'
     
-    const body = await request.json()
-    const { action, data } = body
+    let body: any
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
+    
+    const { action } = body
     
     // 预热请求的快速响应
     if (isWarmupRequest) {
@@ -28,8 +39,11 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'analyze':
+        // 验证请求
+        const analyzeReq = validateAnalyzeRequest(body)
+        
         // 分析提示词类型并生成问题
-        const promptType = analyzePromptType(data.prompt)
+        const promptType = analyzePromptType(analyzeReq.data.prompt)
         const questions = generateQuestions(promptType)
         
         return NextResponse.json({
@@ -38,8 +52,9 @@ export async function POST(request: NextRequest) {
         })
 
       case 'optimize':
-        // 执行优化
-        const { originalPrompt, promptType: type, answers } = data
+        // 验证请求
+        const optimizeReq = validateOptimizeRequest(body)
+        const { originalPrompt, promptType: type, answers } = optimizeReq.data
         
         // 如果没有答案或答案为空，使用智能默认值
         let finalAnswers = answers
@@ -62,8 +77,12 @@ export async function POST(request: NextRequest) {
         }
         
         // 检查是否配置了 API Key
-        const apiKey = process.env.GOOGLE_API_KEY
-        if (!apiKey) {
+        let apiKey: string
+        try {
+          apiKey = getGoogleApiKey()
+        } catch (error) {
+          console.error('API Key not configured:', error)
+          // 返回 mock 数据
           return NextResponse.json({
             optimizedPrompt: generateMockOptimizedPrompt(originalPrompt),
             dimensions: {
@@ -77,6 +96,11 @@ export async function POST(request: NextRequest) {
           })
         }
 
+        // 记录环境信息（仅在开发环境）
+        if (process.env.NODE_ENV === 'development') {
+          logEnvInfo()
+        }
+        
         // 使用 Gemini API
         const genAI = new GoogleGenerativeAI(apiKey)
         const model = genAI.getGenerativeModel({ 
@@ -138,8 +162,25 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('API error:', error)
+    
+    // 处理验证错误
+    if (error instanceof ValidationException) {
+      return NextResponse.json(
+        { 
+          error: 'Validation failed',
+          errors: error.errors 
+        },
+        { status: 400 }
+      )
+    }
+    
+    // 在生产环境中隐藏详细错误信息
+    const isDevelopment = process.env.NODE_ENV === 'development'
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Internal server error',
+        ...(isDevelopment && { details: error instanceof Error ? error.message : 'Unknown error' })
+      },
       { status: 500 }
     )
   }

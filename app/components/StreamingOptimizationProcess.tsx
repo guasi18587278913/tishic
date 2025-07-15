@@ -100,7 +100,12 @@ export default function StreamingOptimizationProcess({
                 setStreamedContent(fullContent)
                 setDisplayContent(fullContent)
                 displayIndexRef.current = fullContent.length
-                setTimeout(() => onComplete(fullContent), 500)
+                console.log('Stream completed, fullContent length:', fullContent.length)
+                console.log('First 200 chars:', fullContent.substring(0, 200))
+                setTimeout(() => {
+                  console.log('Calling onComplete with content')
+                  onComplete(fullContent)
+                }, 500)
                 return
               }
 

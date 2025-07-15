@@ -1,10 +1,38 @@
 import { NextRequest } from 'next/server'
 import { analyzePromptType, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { validateStreamRequest, ValidationException } from '@/app/lib/validation'
+import { getGoogleApiKey } from '@/app/lib/env-validation'
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { originalPrompt, promptType, answers } = body
+  let body: any
+  try {
+    body = await request.json()
+  } catch (e) {
+    return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
+  
+  // 验证请求
+  let validated: { originalPrompt: string; promptType: any; answers: Record<string, string> }
+  try {
+    validated = validateStreamRequest(body)
+  } catch (error) {
+    if (error instanceof ValidationException) {
+      return new Response(JSON.stringify({ 
+        error: 'Validation failed',
+        errors: error.errors 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    throw error
+  }
+  
+  const { originalPrompt, promptType, answers } = validated
 
   // 构建优化提示词
   const optimizationPrompt = buildOptimizationPrompt(originalPrompt, promptType, answers)
@@ -22,9 +50,11 @@ export async function POST(request: NextRequest) {
 
       try {
         // 使用 Gemini API
-        const apiKey = process.env.GOOGLE_API_KEY
-        if (!apiKey) {
-          throw new Error('Google API key not configured')
+        let apiKey: string
+        try {
+          apiKey = getGoogleApiKey()
+        } catch (error) {
+          throw new Error('Google API key not configured: ' + (error as Error).message)
         }
         
         console.log('Using Gemini 2.5 Pro for optimization')

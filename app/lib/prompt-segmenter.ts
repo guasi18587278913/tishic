@@ -58,6 +58,9 @@ export class PromptSegmenter {
         segmentContent = [line]
       } else if (currentSegment) {
         segmentContent.push(line)
+      } else if (segments.length === 0 && line.trim()) {
+        // 如果还没有段落标记但有内容，收集为未分段内容
+        segmentContent.push(line)
       }
     }
     
@@ -66,6 +69,15 @@ export class PromptSegmenter {
       currentSegment.content = segmentContent.join('\n').trim()
       currentSegment.isComplete = !this.isContentTruncated(currentSegment.content)
       segments.push(currentSegment)
+    } else if (segmentContent.length > 0) {
+      // 如果没有找到任何段落标记，将整个内容作为一个段落
+      segments.push({
+        id: 'segment-0',
+        title: '优化后的提示词',
+        content: segmentContent.join('\n').trim(),
+        order: 0,
+        isComplete: true
+      })
     }
     
     return segments

@@ -207,31 +207,44 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
             // 解析流式响应的结果 - 尝试多种格式
             let optimizedPrompt = ''
             
+            // 扩展匹配模式，增加更多可能的格式
             const patterns = [
               /【优化后的提示词】\s*\n([\s\S]*?)(?=\n【六维度设定】|$)/,
               /\*\*优化后的提示词\*\*\s*\n([\s\S]*?)(?=\n\*\*六维度设定\*\*|$)/,
               /优化后的提示词[:：]\s*\n([\s\S]*?)(?=\n六维度|$)/i,
               /## 优化后的提示词\s*\n([\s\S]*?)(?=\n## 六维度设定|$)/,
+              // 新增更灵活的模式
+              /优化后的提示词[：:]*\s*\n+([\s\S]*?)(?=六维度|【六维度|## 六维度|\*\*六维度|$)/i,
+              /【优化后的提示词】[：:]*\s*\n+([\s\S]*?)(?=【六维度|$)/,
+              /\*\*优化后的提示词\*\*[：:]*\s*\n+([\s\S]*?)(?=\*\*六维度|$)/,
             ]
             
             for (const pattern of patterns) {
               const match = result.match(pattern)
               if (match && match[1].trim()) {
                 optimizedPrompt = match[1].trim()
+                console.log('Matched pattern:', pattern.toString())
                 break
               }
             }
             
             // 如果没有匹配到特定格式，尝试提取到六维度之前的内容
             if (!optimizedPrompt) {
-              const sixDimPattern = /(?:【?六维度设定】?|\*\*六维度设定\*\*|## 六维度设定)/
+              // 更灵活的六维度匹配
+              const sixDimPattern = /(?:【?六维度[设定]*】?|\*\*六维度[设定]*\*\*|## 六维度[设定]*|六维度[设定]*[：:])/i
               const sixDimIndex = result.search(sixDimPattern)
               
               if (sixDimIndex > 0) {
-                optimizedPrompt = result.substring(0, sixDimIndex).trim()
+                // 提取六维度之前的内容，并清理可能的标题
+                let content = result.substring(0, sixDimIndex).trim()
+                // 移除可能的标题行
+                content = content.replace(/^(?:【?优化后的提示词】?|\*\*优化后的提示词\*\*|## 优化后的提示词|优化后的提示词)[：:]*\s*/i, '')
+                optimizedPrompt = content.trim()
+                console.log('Extracted content before dimensions')
               } else {
-                // 最后的fallback
-                optimizedPrompt = result
+                // 最后的fallback - 如果完全没有六维度部分，可能整个响应都是优化后的提示词
+                console.log('No dimension markers found, using entire response')
+                optimizedPrompt = result.trim()
               }
             }
             
@@ -241,10 +254,17 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
             console.log('Parsed prompt length:', optimizedPrompt.length)
             console.log('Parsed dimensions:', dimensions)
             
+            // 确保有实际内容
+            if (!optimizedPrompt || optimizedPrompt.trim().length === 0) {
+              console.error('No valid optimized prompt extracted')
+              // 使用原始结果作为fallback
+              optimizedPrompt = result.trim()
+            }
+            
             onStateChange({
               ...state,
               stage: 'complete',
-              optimizedPrompt,
+              optimizedPrompt: optimizedPrompt.trim(),
               dimensions
             })
           }}
@@ -269,12 +289,16 @@ function extractStreamedDimensions(response: string): any {
     qualityStandards: ''
   }
 
-  // 尝试多种格式
+  // 尝试多种格式，更灵活的匹配
   const dimensionPatterns = [
     /【六维度设定】([\s\S]*?)$/m,
     /\*\*六维度设定\*\*([\s\S]*?)$/m,
     /## 六维度设定([\s\S]*?)$/m,
-    /六维度设定[:：]([\s\S]*?)$/mi
+    /六维度设定[:：]([\s\S]*?)$/mi,
+    // 新增更灵活的模式
+    /【?六维度[设定]*】?[：:]*([\s\S]*?)$/mi,
+    /\*\*六维度[设定]*\*\*[：:]*([\s\S]*?)$/mi,
+    /## 六维度[设定]*[：:]*([\s\S]*?)$/mi,
   ]
   
   let dimensionText = ''
@@ -282,45 +306,53 @@ function extractStreamedDimensions(response: string): any {
     const match = response.match(pattern)
     if (match) {
       dimensionText = match[1] || match[0]
+      console.log('Matched dimension pattern:', pattern.toString())
       break
     }
   }
   
   if (!dimensionText) {
+    console.log('No dimension section found in response')
     return dimensions
   }
     
   // 解析每个维度 - 支持多种格式
   const patterns = {
     antiPatterns: [
-      /[-•\*]?\s*反模式[:：]\s*(.+)/,
-      /[-•\*]?\s*避免[:：]\s*(.+)/,
-      /[-•\*]?\s*不要[:：]\s*(.+)/
+      /[-•\*]?\s*反模式[设定]*[:：]\s*(.+)/i,
+      /[-•\*]?\s*避免[:：]\s*(.+)/i,
+      /[-•\*]?\s*不要[:：]\s*(.+)/i,
+      /[-•\*]?\s*反模式[设定]*\s*[：:]\s*(.+)/i,
     ],
     sceneAtmosphere: [
-      /[-•\*]?\s*场景氛围[:：]\s*(.+)/,
-      /[-•\*]?\s*场景[:：]\s*(.+)/,
-      /[-•\*]?\s*背景[:：]\s*(.+)/
+      /[-•\*]?\s*场景[与和]?氛围[:：]\s*(.+)/i,
+      /[-•\*]?\s*场景[:：]\s*(.+)/i,
+      /[-•\*]?\s*背景[:：]\s*(.+)/i,
+      /[-•\*]?\s*场景[与和]?氛围\s*[：:]\s*(.+)/i,
     ],
     styleDepth: [
-      /[-•\*]?\s*风格深度[:：]\s*(.+)/,
-      /[-•\*]?\s*风格[:：]\s*(.+)/,
-      /[-•\*]?\s*表达方式[:：]\s*(.+)/
+      /[-•\*]?\s*风格[与和]?深度[:：]\s*(.+)/i,
+      /[-•\*]?\s*风格[:：]\s*(.+)/i,
+      /[-•\*]?\s*表达方式[:：]\s*(.+)/i,
+      /[-•\*]?\s*风格[与和]?深度\s*[：:]\s*(.+)/i,
     ],
     coreFocus: [
-      /[-•\*]?\s*核心聚焦[:：]\s*(.+)/,
-      /[-•\*]?\s*核心[:：]\s*(.+)/,
-      /[-•\*]?\s*聚焦[:：]\s*(.+)/
+      /[-•\*]?\s*核心聚焦[:：]\s*(.+)/i,
+      /[-•\*]?\s*核心[:：]\s*(.+)/i,
+      /[-•\*]?\s*聚焦[:：]\s*(.+)/i,
+      /[-•\*]?\s*核心聚焦\s*[：:]\s*(.+)/i,
     ],
     formalConstraints: [
-      /[-•\*]?\s*形式约束[:：]\s*(.+)/,
-      /[-•\*]?\s*形式[:：]\s*(.+)/,
-      /[-•\*]?\s*约束[:：]\s*(.+)/
+      /[-•\*]?\s*形式约束[:：]\s*(.+)/i,
+      /[-•\*]?\s*形式[:：]\s*(.+)/i,
+      /[-•\*]?\s*约束[:：]\s*(.+)/i,
+      /[-•\*]?\s*形式约束\s*[：:]\s*(.+)/i,
     ],
     qualityStandards: [
-      /[-•\*]?\s*质量标准[:：]\s*(.+)/,
-      /[-•\*]?\s*质量[:：]\s*(.+)/,
-      /[-•\*]?\s*标准[:：]\s*(.+)/
+      /[-•\*]?\s*质量标准[:：]\s*(.+)/i,
+      /[-•\*]?\s*质量[:：]\s*(.+)/i,
+      /[-•\*]?\s*标准[:：]\s*(.+)/i,
+      /[-•\*]?\s*质量标准\s*[：:]\s*(.+)/i,
     ]
   }
 

@@ -7,13 +7,31 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   
-  // 服务端外部包
-  serverExternalPackages: ['framer-motion'],
-  
-  // 实验性功能
-  experimental: {
-    // 优化包大小
-    // optimizeCss: true, // 暂时禁用，因为需要额外依赖
+  // 添加安全头
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ]
   },
   
   // Webpack 配置

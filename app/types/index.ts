@@ -2,12 +2,19 @@ export type PromptType = 'creative' | 'analytical' | 'task' | 'generative'
 
 export interface OptimizationState {
   originalPrompt: string
-  stage: 'input' | 'analyzing' | 'questioning' | 'optimizing' | 'complete'
+  stage: 'input' | 'analyzing' | 'questioning' | 'optimizing' | 'complete' | 'error'
   promptType?: PromptType
   questions: Question[]
   answers: Record<string, string>
   optimizedPrompt: string
   dimensions?: OptimizationDimensions
+  isLoading?: boolean
+  error?: {
+    message: string
+    code?: string
+    retryable?: boolean
+  }
+  retryCount?: number
 }
 
 export interface Question {
