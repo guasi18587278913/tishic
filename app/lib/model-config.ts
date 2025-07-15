@@ -1,35 +1,35 @@
 // 模型配置 - 可以根据需求切换不同的模型
 
 export const MODEL_CONFIGS = {
-  // Claude 4 系列 - 最稳定可靠
-  'claude-4-opus': {
-    id: 'anthropic/claude-opus-4-20250514',
-    name: 'Claude 4 Opus (最稳定)',
-    description: '最新Claude 4，稳定性和质量的巅峰',
-    speed: '中等',
+  // Claude 3 系列 - 经过验证的稳定模型
+  'claude-3-opus': {
+    id: 'anthropic/claude-3-opus',
+    name: 'Claude 3 Opus (最强质量)',
+    description: '最强大的推理能力，生成质量最高',
+    speed: '较慢',
     cost: '$15/$75 per M tokens',
     qualityScore: 10,
-    speedScore: 5,
+    speedScore: 4,
   },
   
-  'claude-4-sonnet': {
-    id: 'anthropic/claude-sonnet-4-20250514', 
-    name: 'Claude 4 Sonnet (推荐)',
-    description: 'Claude 4 平衡版，稳定且高效',
-    speed: '较快',
+  'claude-3-sonnet': {
+    id: 'anthropic/claude-3-sonnet', 
+    name: 'Claude 3 Sonnet (稳定推荐)',
+    description: '稳定性最佳，质量和速度平衡',
+    speed: '中等',
     cost: '$3/$15 per M tokens',
-    qualityScore: 10,
+    qualityScore: 9,
     speedScore: 7,
   },
   
   // 最新旗舰模型
-  'claude-3.5-sonnet-new': {
-    id: 'anthropic/claude-3.5-sonnet-20241022',
-    name: 'Claude 3.5 Sonnet 最新版',
-    description: '2024年10月版，性能提升明显',
+  'claude-3.5-sonnet': {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet (最新版)',
+    description: '最新版本，性能全面提升',
     speed: '快',
     cost: '$3/$15 per M tokens',
-    qualityScore: 9,
+    qualityScore: 9.5,
     speedScore: 8,
   },
   
@@ -75,7 +75,7 @@ export const MODEL_CONFIGS = {
   },
   
   'claude-3-haiku': {
-    id: 'anthropic/claude-3-haiku-20240307',
+    id: 'anthropic/claude-3-haiku',
     name: 'Claude 3 Haiku (极速)',
     description: '响应极快，适合快速迭代',
     speed: '极快',
@@ -116,8 +116,8 @@ export const MODEL_CONFIGS = {
   },
 }
 
-// 默认使用 Claude 4 Sonnet - 稳定性和质量的完美平衡
-export const DEFAULT_MODEL = MODEL_CONFIGS['claude-4-sonnet'].id
+// 默认使用 Claude 3 Sonnet - 经过验证的稳定选择
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-3-sonnet'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {

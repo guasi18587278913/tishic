@@ -25,28 +25,46 @@ export async function POST(request: NextRequest) {
       }, 60000) // 60秒超时
 
       try {
+        const modelToUse = body.model || getUserPreferredModel()
+        console.log('Using model:', modelToUse)
+        
+        const requestBody = {
+          model: modelToUse,
+          messages: [{ role: 'user', content: optimizationPrompt }],
+          max_tokens: 4000,
+          temperature: 0.7,
+          stream: true, // 启用流式输出
+        }
+        
+        console.log('API Request:', {
+          url: 'https://openrouter.ai/api/v1/chat/completions',
+          model: modelToUse,
+          messageLength: optimizationPrompt.length
+        })
+        
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://prompt-optimizer.vercel.app',
+            'HTTP-Referer': 'https://tishic.netlify.app',
             'X-Title': 'Prompt Optimizer',
           },
-          body: JSON.stringify({
-            model: body.model || getUserPreferredModel(),
-            messages: [{ role: 'user', content: optimizationPrompt }],
-            max_tokens: 4000,
-            temperature: 0.7,
-            stream: true, // 启用流式输出
-          }),
+          body: JSON.stringify(requestBody),
           signal: abortController.signal,
         })
 
         clearTimeout(timeout)
 
         if (!response.ok) {
-          throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+          const errorText = await response.text()
+          console.error('OpenRouter API Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            errorBody: errorText,
+            model: body.model || getUserPreferredModel()
+          })
+          throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
         }
 
         const reader = response.body?.getReader()
