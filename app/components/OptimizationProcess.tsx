@@ -200,12 +200,46 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
         <StreamingOptimizationProcess 
           state={state}
           onComplete={(result) => {
-            // 解析流式响应的结果
-            const optimizedMatch = result.match(/【优化后的提示词】\n([\s\S]*?)(?=\n【六维度设定】|$)/)
-            const optimizedPrompt = optimizedMatch ? optimizedMatch[1].trim() : result
+            console.log('Stream complete, parsing result...')
+            console.log('Result length:', result.length)
+            console.log('Result preview:', result.substring(0, 300))
+            
+            // 解析流式响应的结果 - 尝试多种格式
+            let optimizedPrompt = ''
+            
+            const patterns = [
+              /【优化后的提示词】\s*\n([\s\S]*?)(?=\n【六维度设定】|$)/,
+              /\*\*优化后的提示词\*\*\s*\n([\s\S]*?)(?=\n\*\*六维度设定\*\*|$)/,
+              /优化后的提示词[:：]\s*\n([\s\S]*?)(?=\n六维度|$)/i,
+              /## 优化后的提示词\s*\n([\s\S]*?)(?=\n## 六维度设定|$)/,
+            ]
+            
+            for (const pattern of patterns) {
+              const match = result.match(pattern)
+              if (match && match[1].trim()) {
+                optimizedPrompt = match[1].trim()
+                break
+              }
+            }
+            
+            // 如果没有匹配到特定格式，尝试提取到六维度之前的内容
+            if (!optimizedPrompt) {
+              const sixDimPattern = /(?:【?六维度设定】?|\*\*六维度设定\*\*|## 六维度设定)/
+              const sixDimIndex = result.search(sixDimPattern)
+              
+              if (sixDimIndex > 0) {
+                optimizedPrompt = result.substring(0, sixDimIndex).trim()
+              } else {
+                // 最后的fallback
+                optimizedPrompt = result
+              }
+            }
             
             // 提取六维度
             const dimensions = extractStreamedDimensions(result)
+            
+            console.log('Parsed prompt length:', optimizedPrompt.length)
+            console.log('Parsed dimensions:', dimensions)
             
             onStateChange({
               ...state,
@@ -235,27 +269,72 @@ function extractStreamedDimensions(response: string): any {
     qualityStandards: ''
   }
 
-  const dimensionMatch = response.match(/【六维度设定】[\s\S]*$/m)
-  if (dimensionMatch) {
-    const dimensionText = dimensionMatch[0]
-    
-    const patterns = {
-      antiPatterns: /反模式：(.+)/,
-      sceneAtmosphere: /场景氛围：(.+)/,
-      styleDepth: /风格深度：(.+)/,
-      coreFocus: /核心聚焦：(.+)/,
-      formalConstraints: /形式约束：(.+)/,
-      qualityStandards: /质量标准：(.+)/
+  // 尝试多种格式
+  const dimensionPatterns = [
+    /【六维度设定】([\s\S]*?)$/m,
+    /\*\*六维度设定\*\*([\s\S]*?)$/m,
+    /## 六维度设定([\s\S]*?)$/m,
+    /六维度设定[:：]([\s\S]*?)$/mi
+  ]
+  
+  let dimensionText = ''
+  for (const pattern of dimensionPatterns) {
+    const match = response.match(pattern)
+    if (match) {
+      dimensionText = match[1] || match[0]
+      break
     }
+  }
+  
+  if (!dimensionText) {
+    return dimensions
+  }
+    
+  // 解析每个维度 - 支持多种格式
+  const patterns = {
+    antiPatterns: [
+      /[-•\*]?\s*反模式[:：]\s*(.+)/,
+      /[-•\*]?\s*避免[:：]\s*(.+)/,
+      /[-•\*]?\s*不要[:：]\s*(.+)/
+    ],
+    sceneAtmosphere: [
+      /[-•\*]?\s*场景氛围[:：]\s*(.+)/,
+      /[-•\*]?\s*场景[:：]\s*(.+)/,
+      /[-•\*]?\s*背景[:：]\s*(.+)/
+    ],
+    styleDepth: [
+      /[-•\*]?\s*风格深度[:：]\s*(.+)/,
+      /[-•\*]?\s*风格[:：]\s*(.+)/,
+      /[-•\*]?\s*表达方式[:：]\s*(.+)/
+    ],
+    coreFocus: [
+      /[-•\*]?\s*核心聚焦[:：]\s*(.+)/,
+      /[-•\*]?\s*核心[:：]\s*(.+)/,
+      /[-•\*]?\s*聚焦[:：]\s*(.+)/
+    ],
+    formalConstraints: [
+      /[-•\*]?\s*形式约束[:：]\s*(.+)/,
+      /[-•\*]?\s*形式[:：]\s*(.+)/,
+      /[-•\*]?\s*约束[:：]\s*(.+)/
+    ],
+    qualityStandards: [
+      /[-•\*]?\s*质量标准[:：]\s*(.+)/,
+      /[-•\*]?\s*质量[:：]\s*(.+)/,
+      /[-•\*]?\s*标准[:：]\s*(.+)/
+    ]
+  }
 
-    for (const [key, pattern] of Object.entries(patterns)) {
+  for (const [key, patternList] of Object.entries(patterns)) {
+    for (const pattern of patternList) {
       const match = dimensionText.match(pattern)
       if (match) {
+        const value = match[1].trim()
         if (key === 'antiPatterns') {
-          dimensions[key] = [match[1].trim()]
+          dimensions[key] = [value]
         } else {
-          dimensions[key as keyof typeof dimensions] = match[1].trim()
+          dimensions[key as keyof typeof dimensions] = value
         }
+        break
       }
     }
   }

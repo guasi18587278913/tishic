@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzePromptType, generateQuestions, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
-import { claudeAPI } from '@/app/lib/claude-api'
-import { openRouterAPI } from '@/app/lib/openrouter-api'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { enhancedCache } from '@/app/lib/enhanced-cache'
-import { fetchWithRetry } from '@/app/lib/api-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +14,6 @@ export async function POST(request: NextRequest) {
     // 预热请求的快速响应
     if (isWarmupRequest) {
       console.log('Processing warmup request for action:', action)
-      // 对预热请求返回轻量级响应
       return NextResponse.json({ 
         status: 'warmed',
         action,
@@ -65,7 +62,8 @@ export async function POST(request: NextRequest) {
         }
         
         // 检查是否配置了 API Key
-        if (!process.env.CLAUDE_API_KEY && !process.env.OPENROUTER_API_KEY) {
+        const apiKey = process.env.GOOGLE_API_KEY
+        if (!apiKey) {
           return NextResponse.json({
             optimizedPrompt: generateMockOptimizedPrompt(originalPrompt),
             dimensions: {
@@ -79,31 +77,53 @@ export async function POST(request: NextRequest) {
           })
         }
 
+        // 使用 Gemini API
+        const genAI = new GoogleGenerativeAI(apiKey)
+        const model = genAI.getGenerativeModel({ 
+          model: 'gemini-1.5-pro-latest',
+          generationConfig: {
+            maxOutputTokens: 32768,
+            temperature: 0.7,
+          }
+        })
+
         // 构建优化提示词
         const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, finalAnswers)
-        let response: string
-
-        // 优先使用 OpenRouter，其次使用 Claude API
-        if (process.env.OPENROUTER_API_KEY) {
-          response = await openRouterAPI.sendMessage([
-            { role: 'user', content: optimizationPrompt }
-          ])
-        } else {
-          response = await claudeAPI.sendMessage([
-            { role: 'user', content: optimizationPrompt }
-          ])
-        }
+        
+        // 调用 Gemini
+        const result = await model.generateContent(optimizationPrompt)
+        const response = result.response
+        const text = response.text()
+        
+        console.log('=== Gemini Response Debug ===')
+        console.log('Response length:', text.length)
+        console.log('Response preview (first 500 chars):')
+        console.log(text.substring(0, 500))
+        console.log('Response preview (last 500 chars):')
+        console.log(text.substring(Math.max(0, text.length - 500)))
 
         // 解析响应
-        const result = {
-          optimizedPrompt: extractOptimizedPrompt(response),
-          dimensions: extractDimensions(response)
+        const optimizationResult = {
+          optimizedPrompt: extractOptimizedPrompt(text),
+          dimensions: extractDimensions(text)
+        }
+        
+        console.log('=== Extraction Results ===')
+        console.log('Optimized prompt length:', optimizationResult.optimizedPrompt.length)
+        console.log('Optimized prompt preview:', optimizationResult.optimizedPrompt.substring(0, 100) + '...')
+        console.log('Dimensions:', JSON.stringify(optimizationResult.dimensions, null, 2))
+        
+        // 验证提取结果
+        if (!optimizationResult.optimizedPrompt || optimizationResult.optimizedPrompt.length < 10) {
+          console.error('Warning: Extracted prompt is too short or empty!')
+          // 使用整个响应作为fallback
+          optimizationResult.optimizedPrompt = text
         }
         
         // 保存到缓存
-        enhancedCache.set(originalPrompt, type, finalAnswers, result)
+        enhancedCache.set(originalPrompt, type, finalAnswers, optimizationResult)
         
-        return NextResponse.json(result, {
+        return NextResponse.json(optimizationResult, {
           headers: {
             'X-Cache': 'MISS',
             'Cache-Control': 'private, max-age=3600'
@@ -119,7 +139,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
@@ -144,6 +164,8 @@ ${originalPrompt}的深度优化版本，要求如下：
 }
 
 function extractDimensions(response: string): any {
+  console.log('=== Extracting dimensions ===')
+  
   // 解析响应中的六维度设定
   const dimensions: any = {
     antiPatterns: [],
@@ -154,30 +176,83 @@ function extractDimensions(response: string): any {
     qualityStandards: ''
   }
 
-  // 提取六维度设定部分
-  const dimensionMatch = response.match(/【六维度设定】[\s\S]*$/m)
-  if (dimensionMatch) {
-    const dimensionText = dimensionMatch[0]
-    
-    // 解析每个维度
-    const patterns = {
-      antiPatterns: /反模式：(.+)/,
-      sceneAtmosphere: /场景氛围：(.+)/,
-      styleDepth: /风格深度：(.+)/,
-      coreFocus: /核心聚焦：(.+)/,
-      formalConstraints: /形式约束：(.+)/,
-      qualityStandards: /质量标准：(.+)/
+  // 提取六维度设定部分 - 尝试多种格式
+  const dimensionPatterns = [
+    /【六维度设定】([\s\S]*?)$/m,
+    /\*\*六维度设定\*\*([\s\S]*?)$/m,
+    /## 六维度设定([\s\S]*?)$/m,
+    /六维度设定[:：]([\s\S]*?)$/mi
+  ]
+  
+  let dimensionText = ''
+  for (const pattern of dimensionPatterns) {
+    const match = response.match(pattern)
+    if (match) {
+      dimensionText = match[1] || match[0]
+      console.log('Found dimension section with pattern:', pattern.source)
+      break
     }
+  }
+  
+  if (!dimensionText) {
+    console.log('No dimension section found, using default values')
+    return dimensions
+  }
+  
+  console.log('Dimension text preview:', dimensionText.substring(0, 200))
+  
+  // 解析每个维度 - 支持多种格式
+  const patterns = {
+    antiPatterns: [
+      /[-•\*]?\s*反模式[:：]\s*(.+)/,
+      /[-•\*]?\s*避免[:：]\s*(.+)/,
+      /[-•\*]?\s*不要[:：]\s*(.+)/
+    ],
+    sceneAtmosphere: [
+      /[-•\*]?\s*场景氛围[:：]\s*(.+)/,
+      /[-•\*]?\s*场景[:：]\s*(.+)/,
+      /[-•\*]?\s*背景[:：]\s*(.+)/
+    ],
+    styleDepth: [
+      /[-•\*]?\s*风格深度[:：]\s*(.+)/,
+      /[-•\*]?\s*风格[:：]\s*(.+)/,
+      /[-•\*]?\s*表达方式[:：]\s*(.+)/
+    ],
+    coreFocus: [
+      /[-•\*]?\s*核心聚焦[:：]\s*(.+)/,
+      /[-•\*]?\s*核心[:：]\s*(.+)/,
+      /[-•\*]?\s*聚焦[:：]\s*(.+)/
+    ],
+    formalConstraints: [
+      /[-•\*]?\s*形式约束[:：]\s*(.+)/,
+      /[-•\*]?\s*形式[:：]\s*(.+)/,
+      /[-•\*]?\s*约束[:：]\s*(.+)/
+    ],
+    qualityStandards: [
+      /[-•\*]?\s*质量标准[:：]\s*(.+)/,
+      /[-•\*]?\s*质量[:：]\s*(.+)/,
+      /[-•\*]?\s*标准[:：]\s*(.+)/
+    ]
+  }
 
-    for (const [key, pattern] of Object.entries(patterns)) {
+  for (const [key, patternList] of Object.entries(patterns)) {
+    let found = false
+    for (const pattern of patternList) {
       const match = dimensionText.match(pattern)
       if (match) {
+        const value = match[1].trim()
         if (key === 'antiPatterns') {
-          dimensions[key] = [match[1].trim()]
+          dimensions[key] = [value]
         } else {
-          dimensions[key as keyof typeof dimensions] = match[1].trim()
+          dimensions[key as keyof typeof dimensions] = value
         }
+        console.log(`Found ${key}:`, value.substring(0, 50) + '...')
+        found = true
+        break
       }
+    }
+    if (!found) {
+      console.log(`No match found for ${key}`)
     }
   }
 
@@ -185,10 +260,45 @@ function extractDimensions(response: string): any {
 }
 
 function extractOptimizedPrompt(response: string): string {
-  // 提取优化后的提示词
-  const promptMatch = response.match(/【优化后的提示词】\n([\s\S]*?)(?=\n【六维度设定】|$)/)
-  if (promptMatch) {
-    return promptMatch[1].trim()
+  console.log('=== Extracting optimized prompt ===')
+  console.log('Response first 500 chars:', response.substring(0, 500))
+  
+  // 提取优化后的提示词 - 尝试多种格式
+  const patterns = [
+    /【优化后的提示词】\s*\n([\s\S]*?)(?=\n【六维度设定】|$)/,
+    /\*\*优化后的提示词\*\*\s*\n([\s\S]*?)(?=\n\*\*六维度设定\*\*|$)/,
+    /优化后的提示词[:：]\s*\n([\s\S]*?)(?=\n六维度|$)/i,
+    /## 优化后的提示词\s*\n([\s\S]*?)(?=\n## 六维度设定|$)/,
+  ]
+  
+  for (const pattern of patterns) {
+    const match = response.match(pattern)
+    if (match && match[1].trim()) {
+      console.log('Matched pattern:', pattern.source)
+      console.log('Extracted prompt length:', match[1].trim().length)
+      return match[1].trim()
+    }
   }
-  return response // 如果格式不匹配，返回整个响应
+  
+  // 如果都没匹配到，尝试提取第一个段落直到遇到六维度相关内容
+  const sixDimPattern = /(?:【?六维度设定】?|\*\*六维度设定\*\*|## 六维度设定)/
+  const sixDimIndex = response.search(sixDimPattern)
+  
+  if (sixDimIndex > 0) {
+    const extracted = response.substring(0, sixDimIndex).trim()
+    console.log('Extracted by six-dim boundary, length:', extracted.length)
+    return extracted
+  }
+  
+  // 最后的fallback：如果响应很短，可能整个都是优化后的提示词
+  if (response.length < 1000) {
+    console.log('Using entire response as prompt')
+    return response
+  }
+  
+  // 否则尝试提取前半部分
+  const halfLength = Math.floor(response.length / 2)
+  const firstHalf = response.substring(0, halfLength)
+  console.log('Using first half of response, length:', firstHalf.length)
+  return firstHalf
 }

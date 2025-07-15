@@ -40,10 +40,21 @@ export async function POST(request: NextRequest) {
         
         const result = await model.generateContentStream(optimizationPrompt)
         
+        let totalContent = ''
+        let chunkCount = 0
+        
         // 处理流式响应
         for await (const chunk of result.stream) {
           const text = chunk.text()
           if (text) {
+            totalContent += text
+            chunkCount++
+            
+            // 每10个chunk记录一次
+            if (chunkCount % 10 === 0) {
+              console.log(`Streamed ${chunkCount} chunks, total length: ${totalContent.length}`)
+            }
+            
             // 转换为 OpenAI 格式以保持前端兼容
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ 
@@ -52,6 +63,10 @@ export async function POST(request: NextRequest) {
             )
           }
         }
+        
+        console.log(`Stream complete. Total chunks: ${chunkCount}, Total length: ${totalContent.length}`)
+        console.log('First 500 chars:', totalContent.substring(0, 500))
+        console.log('Last 500 chars:', totalContent.substring(Math.max(0, totalContent.length - 500)))
         
         // 发送结束信号
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))

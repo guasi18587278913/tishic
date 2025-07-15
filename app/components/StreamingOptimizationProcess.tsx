@@ -107,7 +107,12 @@ export default function StreamingOptimizationProcess({
               if (data) {
                 try {
                   const parsed = JSON.parse(data)
-                  if (parsed.content) {
+                  // Handle OpenAI format (from Gemini conversion)
+                  if (parsed.choices && parsed.choices[0]?.delta?.content) {
+                    const content = parsed.choices[0].delta.content
+                    fullContent += content
+                    setStreamedContent(fullContent)
+                  } else if (parsed.content) {
                     fullContent += parsed.content
                     setStreamedContent(fullContent)
                   } else if (parsed.error) {
