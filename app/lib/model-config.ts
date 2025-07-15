@@ -1,15 +1,15 @@
 // 模型配置 - 可以根据需求切换不同的模型
 
 export const MODEL_CONFIGS = {
-  // Claude 3 系列 - 经过验证的稳定模型
-  'claude-3-opus': {
-    id: 'anthropic/claude-3-opus',
-    name: 'Claude 3 Opus (最强质量)',
-    description: '最强大的推理能力，生成质量最高',
-    speed: '较慢',
+  // Claude 4 系列 - 最新最强模型
+  'claude-4-opus': {
+    id: 'anthropic/claude-4-opus',
+    name: 'Claude 4 Opus (最高质量)',
+    description: '最新 Claude 4，最强推理能力，提示词优化效果最佳',
+    speed: '中等',
     cost: '$15/$75 per M tokens',
     qualityScore: 10,
-    speedScore: 4,
+    speedScore: 5,
   },
   
   'claude-3-sonnet': {
@@ -106,8 +106,8 @@ export const MODEL_CONFIGS = {
   },
 }
 
-// 默认使用 Claude 3 Sonnet - 经过验证的稳定选择
-export const DEFAULT_MODEL = MODEL_CONFIGS['claude-3-sonnet'].id
+// 默认使用 Claude 4 Opus - 最新最强的提示词优化
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-4-opus'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {
