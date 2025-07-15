@@ -1,72 +1,102 @@
 // 模型配置 - 可以根据需求切换不同的模型
 
 export const MODEL_CONFIGS = {
+  // 最新旗舰模型
+  'claude-3.5-sonnet-new': {
+    id: 'anthropic/claude-3.5-sonnet-20241022',
+    name: 'Claude 3.5 Sonnet 最新版 (推荐)',
+    description: '2024年10月最新版，性能大幅提升',
+    speed: '快',
+    cost: '$3/$15 per M tokens',
+    qualityScore: 10,
+    speedScore: 8,
+  },
+  
+  'gpt-4o-latest': {
+    id: 'openai/gpt-4o-2024-11-20',
+    name: 'GPT-4o 最新版',
+    description: '2024年11月版，多模态能力强',
+    speed: '非常快',
+    cost: '$2.5/$10 per M tokens',
+    qualityScore: 9,
+    speedScore: 9,
+  },
+  
+  'o1-preview': {
+    id: 'openai/o1-preview',
+    name: 'OpenAI o1 (深度思考)',
+    description: '深度推理，适合复杂提示词优化',
+    speed: '慢',
+    cost: '$15/$60 per M tokens',
+    qualityScore: 10,
+    speedScore: 2,
+  },
+  
+  'o1-mini': {
+    id: 'openai/o1-mini',
+    name: 'OpenAI o1-mini (高性价比)',
+    description: '推理能力强，成本更低',
+    speed: '中等',
+    cost: '$3/$12 per M tokens',
+    qualityScore: 9,
+    speedScore: 6,
+  },
+  
   // Claude 系列
   'claude-3-opus': {
     id: 'anthropic/claude-3-opus',
-    name: 'Claude 3 Opus (最强质量)',
-    description: '最强大的推理能力，生成质量最高',
+    name: 'Claude 3 Opus',
+    description: '强大推理，适合专业场景',
     speed: '较慢',
     cost: '$15/$75 per M tokens',
-    qualityScore: 10,
+    qualityScore: 9,
     speedScore: 3,
   },
   
-  'claude-3.5-sonnet': {
-    id: 'anthropic/claude-3.5-sonnet:beta',
-    name: 'Claude 3.5 Sonnet (推荐)',
-    description: '最新版本，质量优秀，速度适中',
-    speed: '中等',
-    cost: '$3/$15 per M tokens',
-    qualityScore: 9,
-    speedScore: 7,
-  },
-  
   'claude-3-haiku': {
-    id: 'anthropic/claude-3-haiku',
-    name: 'Claude 3 Haiku (快速)',
-    description: '响应极快，适合简单优化',
-    speed: '非常快',
+    id: 'anthropic/claude-3-haiku-20240307',
+    name: 'Claude 3 Haiku (极速)',
+    description: '响应极快，适合快速迭代',
+    speed: '极快',
     cost: '$0.25/$1.25 per M tokens',
     qualityScore: 7,
     speedScore: 10,
   },
   
-  // GPT 系列
-  'gpt-4-turbo': {
-    id: 'openai/gpt-4-turbo',
-    name: 'GPT-4 Turbo (高质量)',
-    description: '优秀的理解和生成能力',
-    speed: '较快',
-    cost: '$10/$30 per M tokens',
-    qualityScore: 9,
-    speedScore: 8,
-  },
-  
-  'gpt-4o': {
-    id: 'openai/gpt-4o',
-    name: 'GPT-4o (性价比)',
-    description: '成本效益最佳，质量良好',
-    speed: '快',
-    cost: '$2.5/$10 per M tokens',
+  // 其他最新模型
+  'gemini-2-flash': {
+    id: 'google/gemini-2.0-flash-exp',
+    name: 'Gemini 2.0 Flash (实验版)',
+    description: '谷歌最新模型，速度极快',
+    speed: '极快',
+    cost: '$0.3/$1.2 per M tokens',
     qualityScore: 8,
-    speedScore: 9,
+    speedScore: 10,
   },
   
-  // 其他优秀模型
-  'gemini-pro': {
-    id: 'google/gemini-pro-1.5',
-    name: 'Gemini Pro 1.5 (长文本)',
-    description: '擅长处理长文本，理解深入',
+  'qwen-qwq': {
+    id: 'qwen/qwq-32b-preview',
+    name: 'Qwen QwQ-32B (推理专家)',
+    description: '阿里最新推理模型，深度思考',
     speed: '中等',
-    cost: '$3.5/$10.5 per M tokens',
+    cost: '$0.8/$1.6 per M tokens',
+    qualityScore: 9,
+    speedScore: 5,
+  },
+  
+  'deepseek-v3': {
+    id: 'deepseek/deepseek-chat',
+    name: 'DeepSeek-V3 (中文优化)',
+    description: '中文理解能力强，成本低',
+    speed: '快',
+    cost: '$0.14/$0.28 per M tokens',
     qualityScore: 8,
-    speedScore: 7,
+    speedScore: 8,
   },
 }
 
-// 默认使用高质量模型，可在设置中切换
-export const DEFAULT_MODEL = MODEL_CONFIGS['claude-3.5-sonnet'].id
+// 默认使用最新的 Claude 3.5 Sonnet
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-3.5-sonnet-new'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {
