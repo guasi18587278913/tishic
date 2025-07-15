@@ -6,6 +6,7 @@ import PromptInput from './PromptInput'
 import OptimizationQuestions from './OptimizationQuestions'
 import OptimizationProcess from './OptimizationProcess'
 import OptimizedResult from './OptimizedResult'
+import { analyzePromptType } from '../lib/prompt-optimizer'
 
 interface OptimizationFlowProps {
   optimizationState: OptimizationState
@@ -23,13 +24,31 @@ export default function OptimizationFlow({
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const handlePromptSubmit = (prompt: string) => {
+    // 检查是否是快速优化
+    const isQuickOptimize = prompt.includes('__QUICK_OPTIMIZE__')
+    const cleanPrompt = prompt.replace('__QUICK_OPTIMIZE__', '')
+    
     setIsTransitioning(true)
     setTimeout(() => {
-      setOptimizationState({
-        ...optimizationState,
-        originalPrompt: prompt,
-        stage: 'analyzing',
-      })
+      if (isQuickOptimize) {
+        // 快速优化：跳过问题收集，直接进入优化阶段
+        const promptType = analyzePromptType(cleanPrompt)
+        setOptimizationState({
+          ...optimizationState,
+          originalPrompt: cleanPrompt,
+          stage: 'optimizing',
+          promptType: promptType,
+          questions: [],
+          answers: {}, // 使用空答案，API会使用智能默认值
+        })
+      } else {
+        // 常规流程
+        setOptimizationState({
+          ...optimizationState,
+          originalPrompt: cleanPrompt,
+          stage: 'analyzing',
+        })
+      }
       setIsTransitioning(false)
     }, 300)
   }

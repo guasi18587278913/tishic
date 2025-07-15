@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export default function Stats() {
   const [counts, setCounts] = useState({
@@ -115,6 +116,24 @@ export default function Stats() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Final Call to Action */}
+        <div className="mt-20 text-center">
+          <h3 className="text-3xl font-bold mb-4">
+            加入 <span className="text-gradient">{counts.users.toLocaleString()}+</span> 用户的选择
+          </h3>
+          <p className="text-gray-400 mb-8 max-w-2xl mx-auto text-lg">
+            体验智能提示词优化带来的效率提升，让AI成为你的得力助手
+          </p>
+          <Link 
+            href="/optimizer"
+            className="inline-flex items-center gap-3 px-10 py-5 gradient-button-primary rounded-xl font-semibold text-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-teal-500/30 group"
+          >
+            <i className="fas fa-rocket group-hover:rotate-12 transition-transform"></i>
+            立即开始优化
+            <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </Link>
         </div>
       </div>
     </section>

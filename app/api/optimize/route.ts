@@ -2,12 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { analyzePromptType, generateQuestions, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
 import { claudeAPI } from '@/app/lib/claude-api'
 import { openRouterAPI } from '@/app/lib/openrouter-api'
-import { optimizationCache } from '@/app/lib/cache'
+import { enhancedCache } from '@/app/lib/enhanced-cache'
+import { fetchWithRetry } from '@/app/lib/api-utils'
 
 export async function POST(request: NextRequest) {
   try {
+    // 检查是否是预热请求
+    const isWarmupRequest = request.headers.get('X-Warmup-Request') === 'true'
+    
     const body = await request.json()
     const { action, data } = body
+    
+    // 预热请求的快速响应
+    if (isWarmupRequest) {
+      console.log('Processing warmup request for action:', action)
+      // 对预热请求返回轻量级响应
+      return NextResponse.json({ 
+        status: 'warmed',
+        action,
+        timestamp: Date.now() 
+      }, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'X-Warmup-Response': 'true'
+        }
+      })
+    }
 
     switch (action) {
       case 'analyze':
@@ -24,11 +44,24 @@ export async function POST(request: NextRequest) {
         // 执行优化
         const { originalPrompt, promptType: type, answers } = data
         
+        // 如果没有答案或答案为空，使用智能默认值
+        let finalAnswers = answers
+        if (!answers || Object.keys(answers).length === 0) {
+          const { generateSmartDefaults } = await import('@/app/lib/smart-defaults')
+          const smartDefaults = generateSmartDefaults(originalPrompt, type)
+          finalAnswers = smartDefaults.answers
+        }
+        
         // 检查缓存
-        const cached = optimizationCache.get(originalPrompt, answers)
+        const cached = enhancedCache.get(originalPrompt, finalAnswers)
         if (cached) {
           console.log('使用缓存的优化结果')
-          return NextResponse.json(cached.result)
+          return NextResponse.json(cached.result, {
+            headers: {
+              'X-Cache': 'HIT',
+              'Cache-Control': 'private, max-age=3600'
+            }
+          })
         }
         
         // 检查是否配置了 API Key
@@ -47,7 +80,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 构建优化提示词
-        const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, answers)
+        const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, finalAnswers)
         let response: string
 
         // 优先使用 OpenRouter，其次使用 Claude API
@@ -68,9 +101,14 @@ export async function POST(request: NextRequest) {
         }
         
         // 保存到缓存
-        optimizationCache.set(originalPrompt, type, answers, result)
+        enhancedCache.set(originalPrompt, type, finalAnswers, result)
         
-        return NextResponse.json(result)
+        return NextResponse.json(result, {
+          headers: {
+            'X-Cache': 'MISS',
+            'Cache-Control': 'private, max-age=3600'
+          }
+        })
 
       default:
         return NextResponse.json(

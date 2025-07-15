@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const initCanvas = () => {
@@ -93,14 +96,16 @@ export default function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button 
-            onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-4 gradient-button-primary rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 relative overflow-hidden group"
+          <Link 
+            href="/optimizer"
+            className="px-8 py-4 gradient-button-primary rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 relative overflow-hidden group inline-block"
           >
             <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-            <i className="fas fa-rocket mr-2"></i>
-            立即体验
-          </button>
+            <span className="relative flex items-center">
+              <i className="fas fa-rocket mr-2"></i>
+              立即体验
+            </span>
+          </Link>
         </div>
 
         <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">

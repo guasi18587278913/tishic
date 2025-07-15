@@ -2,26 +2,38 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Question } from '../types'
+import { generateSmartDefaults, generateQuickOptimizationDescription } from '../lib/smart-defaults'
 
 interface OptimizationQuestionsProps {
   questions: Question[]
   onComplete: (answers: Record<string, string>) => void
   onBack: () => void
+  originalPrompt?: string
+  promptType?: string
 }
 
 export default function OptimizationQuestions({ 
   questions, 
   onComplete,
-  onBack
+  onBack,
+  originalPrompt = '',
+  promptType = 'creative'
 }: OptimizationQuestionsProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [showQuickOptimizeHint, setShowQuickOptimizeHint] = useState(true)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   const currentQuestion = questions[currentIndex]
   const progress = ((currentIndex) / questions.length) * 100
   const currentAnswer = answers[currentQuestion?.id] || ''
+  
+  // 快速优化功能
+  const handleQuickOptimization = () => {
+    const smartDefaults = generateSmartDefaults(originalPrompt, promptType as any)
+    onComplete(smartDefaults.answers)
+  }
   
   // 当问题变化时自动聚焦
   useEffect(() => {
@@ -64,9 +76,7 @@ export default function OptimizationQuestions({
     // Ctrl/Cmd + Enter 提交
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
-      if (currentAnswer.trim() || currentIndex > 0) {
-        handleNext()
-      }
+      handleNext() // 允许跳过任何问题
     }
     // ESC 返回上一步
     if (e.key === 'Escape') {
@@ -88,6 +98,36 @@ export default function OptimizationQuestions({
 
   return (
     <div className="w-full">
+      {/* 快速优化提示 - 只在第一个问题时显示 */}
+      {currentIndex === 0 && showQuickOptimizeHint && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-teal-500/10 to-emerald-500/10 border border-teal-500/30 rounded-xl animate-fade-in">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h4 className="text-white font-medium mb-1 flex items-center gap-2">
+                <i className="fas fa-bolt text-teal-400"></i>
+                懒人模式
+              </h4>
+              <p className="text-sm text-gray-300 mb-3">
+                不想回答问题？直接使用智能优化，我们会根据你的提示词自动配置最佳参数
+              </p>
+              <button
+                onClick={handleQuickOptimization}
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-teal-500/25 transition-all duration-300 flex items-center gap-2"
+              >
+                <i className="fas fa-magic"></i>
+                一键智能优化
+              </button>
+            </div>
+            <button
+              onClick={() => setShowQuickOptimizeHint(false)}
+              className="ml-4 text-gray-500 hover:text-gray-400 transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
@@ -137,7 +177,7 @@ export default function OptimizationQuestions({
 
         {/* Hint Text */}
         <p className="mt-3 text-sm text-gray-500">
-          💡 提示：{currentIndex === 0 ? '详细描述你的需求，有助于生成更精准的提示词' : '可选问题，按 Ctrl+Enter 快速跳到下一个'}
+          💡 提示：{currentIndex === 0 ? '回答问题可以获得更精准的优化效果，或点击"直接优化"使用智能配置' : '可选问题，可直接跳过或使用"直接优化"'}
         </p>
       </div>
 
@@ -164,6 +204,16 @@ export default function OptimizationQuestions({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* 快速优化按钮 - 在所有步骤都显示 */}
+          <button
+            onClick={handleQuickOptimization}
+            className="px-4 py-2 border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 rounded-xl transition-all duration-300 flex items-center gap-2"
+            title="使用智能默认配置直接优化"
+          >
+            <i className="fas fa-bolt text-sm"></i>
+            <span className="hidden sm:inline">直接优化</span>
+          </button>
+          
           <button
             onClick={() => handleAnswerChange('')}
             className="px-4 py-2 text-gray-500 hover:text-gray-400 transition-colors"
@@ -173,8 +223,7 @@ export default function OptimizationQuestions({
           
           <button
             onClick={handleNext}
-            disabled={!currentAnswer.trim() && currentIndex === 0} // First question is required
-            className="px-6 py-2.5 gradient-button-primary text-white rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
+            className="px-6 py-2.5 gradient-button-primary text-white rounded-xl font-medium transition-all duration-300 flex items-center gap-2 group"
           >
             <span>{currentIndex === questions.length - 1 ? '开始优化' : '下一步'}</span>
             <i className={`fas ${currentIndex === questions.length - 1 ? 'fa-magic' : 'fa-arrow-right'} text-sm group-hover:translate-x-0.5 transition-transform`}></i>

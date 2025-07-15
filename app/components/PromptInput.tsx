@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { promptPreloader } from '../lib/prompt-preloader'
+import { debounce } from '../lib/api-utils'
 
 interface PromptInputProps {
   onSubmit: (prompt: string) => void
@@ -17,6 +19,17 @@ const examplePrompts = [
 export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
   const [prompt, setPrompt] = useState('')
   const [enableStreaming, setEnableStreaming] = useState(true)
+  
+  // 创建防抖的预测函数
+  const predictInput = useCallback(
+    debounce((input: string) => {
+      if (input.length > 5) {
+        // 当用户输入超过5个字符时，开始预测性预加载
+        promptPreloader.predictUserInput(input)
+      }
+    }, 500),
+    []
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,21 +55,49 @@ export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
       <form onSubmit={handleSubmit}>
         <textarea
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value
+            setPrompt(newValue)
+            // 触发预测性预加载
+            predictInput(newValue)
+          }}
           onKeyDown={handleKeyDown}
           placeholder="例如：写一篇关于AI发展的文章..."
           className="w-full h-32 p-4 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-white placeholder-gray-500"
           disabled={disabled}
         />
         
-        <button
-          type="submit"
-          disabled={disabled || !prompt.trim()}
-          className="mt-4 w-full gradient-button-primary text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group neon-teal"
-        >
-          <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-          <span className="relative">开始优化</span>
-        </button>
+        <div className="mt-4 flex gap-3">
+          <button
+            type="submit"
+            disabled={disabled || !prompt.trim()}
+            className="flex-1 gradient-button-primary text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group neon-teal"
+          >
+            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+            <span className="relative flex items-center justify-center gap-2">
+              <i className="fas fa-comment-dots"></i>
+              个性化优化
+            </span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => {
+              if (prompt.trim()) {
+                // 设置标记，让父组件知道要使用快速优化
+                onSubmit(prompt.trim() + '__QUICK_OPTIMIZE__')
+              }
+            }}
+            disabled={disabled || !prompt.trim()}
+            className="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-teal-500/25 relative overflow-hidden group"
+          >
+            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+            <span className="relative flex items-center justify-center gap-2">
+              <i className="fas fa-bolt"></i>
+              快速优化
+            </span>
+          </button>
+        </div>
       </form>
 
       <div className="mt-6">

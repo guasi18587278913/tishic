@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 const features = [
   {
     icon: 'fa-brain',
@@ -65,6 +67,23 @@ export default function Features() {
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
             </div>
           ))}
+        </div>
+        
+        {/* Call to Action */}
+        <div className="mt-20 text-center">
+          <h3 className="text-2xl font-bold mb-4">
+            准备好提升你的AI对话体验了吗？
+          </h3>
+          <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
+            立即开始使用我们的智能优化工具，让每一次与AI的对话都能获得理想的结果
+          </p>
+          <Link 
+            href="/optimizer"
+            className="inline-flex items-center gap-2 px-8 py-4 gradient-button-primary rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-teal-500/25"
+          >
+            <i className="fas fa-magic"></i>
+            开始优化提示词
+          </Link>
         </div>
       </div>
     </section>

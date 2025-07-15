@@ -287,3 +287,208 @@
     transform: translateX(200%);
   }
 }
+
+/* 页面过渡动画 */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.page-transition-enter {
+  animation: pageEnter 0.5s ease-out forwards;
+}
+
+.page-transition-exit {
+  animation: pageExit 0.3s ease-in forwards;
+}
+
+/* 淡入淡出效果 */
+@keyframes fadeEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeExit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.transition-fade-enter {
+  animation: fadeEnter 0.5s ease-out forwards;
+}
+
+.transition-fade-exit {
+  animation: fadeExit 0.3s ease-in forwards;
+}
+
+/* 滑动效果 */
+@keyframes slideEnter {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+}
+
+.transition-slide-enter {
+  animation: slideEnter 0.6s ease-out forwards;
+}
+
+.transition-slide-exit {
+  animation: slideExit 0.4s ease-in forwards;
+}
+
+/* 缩放效果 */
+@keyframes scaleEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+.transition-scale-enter {
+  animation: scaleEnter 0.5s ease-out forwards;
+}
+
+.transition-scale-exit {
+  animation: scaleExit 0.3s ease-in forwards;
+}
+
+/* 翻转效果 */
+@keyframes flipEnter {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateY(0);
+  }
+}
+
+@keyframes flipExit {
+  from {
+    opacity: 1;
+    transform: perspective(1000px) rotateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: perspective(1000px) rotateY(-90deg);
+  }
+}
+
+.transition-flip-enter {
+  animation: flipEnter 0.7s ease-out forwards;
+}
+
+.transition-flip-exit {
+  animation: flipExit 0.5s ease-in forwards;
+}
+
+/* 旋转效果 */
+@keyframes rotateEnter {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes rotateExit {
+  from {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(180deg) scale(0.5);
+  }
+}
+
+.transition-rotate-enter {
+  animation: rotateEnter 0.6s ease-out forwards;
+}
+
+.transition-rotate-exit {
+  animation: rotateExit 0.4s ease-in forwards;
+}
+
+/* 模糊效果 */
+@keyframes blurEnter {
+  from {
+    opacity: 0;
+    filter: blur(20px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes blurExit {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(20px);
+  }
+}
+
+.transition-blur-enter {
+  animation: blurEnter 0.5s ease-out forwards;
+}
+
+.transition-blur-exit {
+  animation: blurExit 0.3s ease-in forwards;
+}

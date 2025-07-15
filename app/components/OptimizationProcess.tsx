@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { OptimizationState, Question } from '../types'
 import LoadingOptimization from './LoadingOptimization'
 import StreamingOptimizationProcess from './StreamingOptimizationProcess'
 import OptimizationQuestions from './OptimizationQuestions'
+import { debounce } from '../lib/api-utils'
+import { loadingManager } from './GlobalLoadingIndicator'
 
 interface OptimizationProcessProps {
   state: OptimizationState
@@ -25,6 +27,8 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
 
   const analyzePrompt = async () => {
     try {
+      loadingManager.show('正在分析你的需求...', 30)
+      
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,14 +40,20 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
 
       const result = await response.json()
       
+      loadingManager.show('分析完成，准备收集信息...', 70)
+      
       onStateChange({
         ...state,
         stage: 'questioning',
         promptType: result.promptType,
         questions: result.questions
       })
+      
+      loadingManager.hide()
     } catch (error) {
       console.error('分析失败:', error)
+      loadingManager.hide()
+      
       // 使用默认值
       onStateChange({
         ...state,
@@ -158,6 +168,8 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
       <div className="animate-slide-up">
         <OptimizationQuestions
           questions={state.questions}
+          originalPrompt={state.originalPrompt}
+          promptType={state.promptType}
           onComplete={(allAnswers) => {
             // All questions answered, start optimization
             onStateChange({
