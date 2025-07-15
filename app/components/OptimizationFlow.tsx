@@ -141,13 +141,6 @@ export default function OptimizationFlow({
         </div>
       </div>
 
-      {/* 底部快捷键提示 */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
-        <div className="glass rounded-full px-4 py-2 text-xs text-gray-400 flex items-center gap-4">
-          <span><kbd className="px-2 py-1 bg-gray-800 rounded text-gray-300">Enter</kbd> 确认</span>
-          <span><kbd className="px-2 py-1 bg-gray-800 rounded text-gray-300">ESC</kbd> 返回</span>
-        </div>
-      </div>
     </section>
   )
 }
