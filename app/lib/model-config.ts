@@ -2,9 +2,9 @@
 
 export const MODEL_CONFIGS = {
   // Claude 4 系列 - 最新最强模型
-  'claude-4-opus': {
-    id: 'anthropic/claude-4-opus',
-    name: 'Claude 4 Opus (最高质量)',
+  'claude-opus-4': {
+    id: 'anthropic/claude-opus-4',
+    name: 'Claude Opus 4 (最高质量)',
     description: '最新 Claude 4，最强推理能力，提示词优化效果最佳',
     speed: '中等',
     cost: '$15/$75 per M tokens',
@@ -106,8 +106,8 @@ export const MODEL_CONFIGS = {
   },
 }
 
-// 默认使用 Claude 4 Opus - 最新最强的提示词优化
-export const DEFAULT_MODEL = MODEL_CONFIGS['claude-4-opus'].id
+// 默认使用 Claude Opus 4 - 最新最强的提示词优化
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-opus-4'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {

@@ -10,7 +10,7 @@ export const API_PROVIDERS = {
       'X-Title': 'Prompt Optimizer',
     }),
     models: {
-      'claude-4-opus': 'anthropic/claude-4-opus',
+      'claude-opus-4': 'anthropic/claude-opus-4',
       'claude-3-opus': 'anthropic/claude-3-opus',
       'claude-3-sonnet': 'anthropic/claude-3-sonnet',
       'claude-3.5-sonnet': 'anthropic/claude-3.5-sonnet',
