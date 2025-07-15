@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: '提示词优化助手 - AI Prompt Optimizer',
   description: '使用六维度优化框架，将模糊的想法转化为精准的AI提示词',
+  metadataBase: new URL('https://your-domain.com'),
 }
 
 export default function RootLayout({

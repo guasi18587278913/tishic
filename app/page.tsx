@@ -6,7 +6,7 @@ import Features from './components/Features'
 import HowItWorks from './components/HowItWorks'
 import Stats from './components/Stats'
 import Footer from './components/Footer'
-import { apiWarmup, setupDefaultWarmupTasks } from './lib/api-warmup'
+import { apiWarmup, APIWarmup, setupDefaultWarmupTasks } from './lib/api-warmup'
 import { promptPreloader } from './lib/prompt-preloader'
 import { usePerformanceMonitor } from './hooks/usePerformanceMonitor'
 
@@ -16,7 +16,7 @@ export default function Home() {
   // 页面加载时开始API预热
   useEffect(() => {
     // 设置预连接
-    apiWarmup.setupPreconnect()
+    APIWarmup.setupPreconnect()
     
     // 设置默认预热任务
     setupDefaultWarmupTasks()

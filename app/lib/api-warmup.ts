@@ -124,6 +124,7 @@ class APIWarmup {
 }
 
 export const apiWarmup = new APIWarmup()
+export { APIWarmup }
 
 // 预定义的预热任务
 export const setupDefaultWarmupTasks = () => {

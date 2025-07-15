@@ -18,7 +18,9 @@ class EnhancedOptimizationCache {
 
   constructor() {
     // 启动时从 localStorage 加载缓存
-    this.loadFromStorage()
+    if (typeof window !== 'undefined') {
+      this.loadFromStorage()
+    }
   }
 
   private generateKey(prompt: string, answers: Record<string, string>): string {

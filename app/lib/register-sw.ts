@@ -71,7 +71,7 @@ export class ServiceWorkerManager {
         resolve(event.data.success)
       }
 
-      navigator.serviceWorker.controller.postMessage(
+      navigator.serviceWorker.controller!.postMessage(
         { type: 'CLEAR_CACHE' },
         [channel.port2]
       )

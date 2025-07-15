@@ -2,20 +2,18 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // 优化构建输出
-  swcMinify: true,
-  
   // 图片优化
   images: {
     formats: ['image/avif', 'image/webp'],
   },
   
+  // 服务端外部包
+  serverExternalPackages: ['framer-motion'],
+  
   // 实验性功能
   experimental: {
     // 优化包大小
-    optimizeCss: true,
-    // 启用服务端组件优化
-    serverComponentsExternalPackages: ['framer-motion'],
+    // optimizeCss: true, // 暂时禁用，因为需要额外依赖
   },
   
   // Webpack 配置

@@ -18,8 +18,8 @@ export default function OptimizedStreamingProcess({
   const [streamedContent, setStreamedContent] = useState('')
   const [progress, setProgress] = useState(0)
   const [status, setStatus] = useState<'connecting' | 'streaming' | 'complete' | 'error'>('connecting')
-  const abortControllerRef = useRef<AbortController>()
-  const streamProcessorRef = useRef<StreamProcessor>()
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const streamProcessorRef = useRef<StreamProcessor | null>(null)
 
   useEffect(() => {
     if (state.stage === 'optimizing') {

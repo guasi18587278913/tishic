@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import OptimizationFlow from '../components/OptimizationFlow'
 import { OptimizationState } from '../types'
@@ -13,7 +13,7 @@ import {
 import SettingsPanel from '../components/SettingsPanel'
 import { getUserTransitionPreference } from '../lib/transition-effects'
 
-export default function OptimizerPage() {
+function OptimizerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -211,5 +211,19 @@ export default function OptimizerPage() {
         setEnableStreaming={setEnableStreaming}
       />
     </main>
+  )
+}
+
+export default function OptimizerPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-pulse">
+          <div className="w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    }>
+      <OptimizerContent />
+    </Suspense>
   )
 }

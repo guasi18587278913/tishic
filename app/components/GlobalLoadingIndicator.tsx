@@ -15,7 +15,9 @@ class LoadingManager {
 
   subscribe(listener: (state: LoadingState) => void) {
     this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
   }
 
   setState(state: LoadingState) {
@@ -38,7 +40,8 @@ export default function GlobalLoadingIndicator() {
   const [state, setState] = useState<LoadingState>({ isLoading: false })
 
   useEffect(() => {
-    return loadingManager.subscribe(setState)
+    const unsubscribe = loadingManager.subscribe(setState)
+    return unsubscribe
   }, [])
 
   if (!state.isLoading) return null
