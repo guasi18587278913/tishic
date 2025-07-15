@@ -21,6 +21,7 @@ export const MODEL_CONFIGS = {
     cost: '$3/$15 per M tokens',
     qualityScore: 9,
     speedScore: 7,
+    maxTokens: 16000,
   },
   
   // 最新旗舰模型
@@ -32,6 +33,7 @@ export const MODEL_CONFIGS = {
     cost: '$3/$15 per M tokens',
     qualityScore: 9.5,
     speedScore: 8,
+    maxTokens: 16000,
   },
   
   'gpt-4o-latest': {
@@ -42,6 +44,7 @@ export const MODEL_CONFIGS = {
     cost: '$2.5/$10 per M tokens',
     qualityScore: 9,
     speedScore: 9,
+    maxTokens: 16000,
   },
   
   'o1-preview': {
@@ -52,6 +55,7 @@ export const MODEL_CONFIGS = {
     cost: '$15/$60 per M tokens',
     qualityScore: 10,
     speedScore: 2,
+    maxTokens: 32000,
   },
   
   'o1-mini': {
@@ -62,6 +66,7 @@ export const MODEL_CONFIGS = {
     cost: '$3/$12 per M tokens',
     qualityScore: 9,
     speedScore: 6,
+    maxTokens: 16000,
   },
   
   
@@ -73,6 +78,7 @@ export const MODEL_CONFIGS = {
     cost: '$0.25/$1.25 per M tokens',
     qualityScore: 7,
     speedScore: 10,
+    maxTokens: 8000,
   },
   
   // 其他最新模型
@@ -84,6 +90,7 @@ export const MODEL_CONFIGS = {
     cost: '$0.3/$1.2 per M tokens',
     qualityScore: 8,
     speedScore: 10,
+    maxTokens: 8000,
   },
   
   'qwen-qwq': {
@@ -94,6 +101,7 @@ export const MODEL_CONFIGS = {
     cost: '$0.8/$1.6 per M tokens',
     qualityScore: 9,
     speedScore: 5,
+    maxTokens: 16000,
   },
   
   'deepseek-v3': {
@@ -104,6 +112,7 @@ export const MODEL_CONFIGS = {
     cost: '$0.14/$0.28 per M tokens',
     qualityScore: 8,
     speedScore: 8,
+    maxTokens: 16000,
   },
 }
 
@@ -171,5 +180,5 @@ export function getModelInfo(modelId: string) {
 // 获取模型的最大 token 数
 export function getModelMaxTokens(modelId: string): number {
   const model = Object.values(MODEL_CONFIGS).find(m => m.id === modelId)
-  return model?.maxTokens || 16000 // 默认 16000
+  return (model as any)?.maxTokens || 16000 // 默认 16000
 }
