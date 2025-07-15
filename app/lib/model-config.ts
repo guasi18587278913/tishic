@@ -1,14 +1,35 @@
 // 模型配置 - 可以根据需求切换不同的模型
 
 export const MODEL_CONFIGS = {
+  // Claude 4 系列 - 最稳定可靠
+  'claude-4-opus': {
+    id: 'anthropic/claude-opus-4-20250514',
+    name: 'Claude 4 Opus (最稳定)',
+    description: '最新Claude 4，稳定性和质量的巅峰',
+    speed: '中等',
+    cost: '$15/$75 per M tokens',
+    qualityScore: 10,
+    speedScore: 5,
+  },
+  
+  'claude-4-sonnet': {
+    id: 'anthropic/claude-sonnet-4-20250514', 
+    name: 'Claude 4 Sonnet (推荐)',
+    description: 'Claude 4 平衡版，稳定且高效',
+    speed: '较快',
+    cost: '$3/$15 per M tokens',
+    qualityScore: 10,
+    speedScore: 7,
+  },
+  
   // 最新旗舰模型
   'claude-3.5-sonnet-new': {
     id: 'anthropic/claude-3.5-sonnet-20241022',
-    name: 'Claude 3.5 Sonnet 最新版 (推荐)',
-    description: '2024年10月最新版，性能大幅提升',
+    name: 'Claude 3.5 Sonnet 最新版',
+    description: '2024年10月版，性能提升明显',
     speed: '快',
     cost: '$3/$15 per M tokens',
-    qualityScore: 10,
+    qualityScore: 9,
     speedScore: 8,
   },
   
@@ -95,8 +116,8 @@ export const MODEL_CONFIGS = {
   },
 }
 
-// 默认使用最新的 Claude 3.5 Sonnet
-export const DEFAULT_MODEL = MODEL_CONFIGS['claude-3.5-sonnet-new'].id
+// 默认使用 Claude 4 Sonnet - 稳定性和质量的完美平衡
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-4-sonnet'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {
