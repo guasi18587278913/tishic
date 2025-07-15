@@ -6,7 +6,7 @@ const features = [
     title: '智能分析',
     titleEn: 'Smart Analysis',
     description: '自动识别提示词类型，深度理解用户意图',
-    gradient: 'from-purple-500 to-pink-500',
+    gradient: 'from-teal-500 to-emerald-500',
   },
   {
     icon: 'fa-cube',

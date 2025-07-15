@@ -42,7 +42,7 @@ export default function Hero() {
 
           ctx.beginPath()
           ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-          ctx.fillStyle = 'rgba(147, 51, 234, 0.5)'
+          ctx.fillStyle = `rgba(${Math.random() > 0.5 ? '13, 148, 136' : '16, 185, 129'}, ${0.3 + Math.random() * 0.4})`
           ctx.fill()
         })
 
@@ -72,8 +72,9 @@ export default function Hero() {
       
       {/* Gradient Overlays */}
       <div className="absolute inset-0 z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full filter blur-[128px] opacity-20 animate-float" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500 rounded-full filter blur-[128px] opacity-20 animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 left-1/4 w-96 h-96 gradient-hero rounded-full filter blur-[128px] opacity-30 animate-float" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full filter blur-[128px] opacity-30 animate-float" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] gradient-accent rounded-full filter blur-[200px] opacity-20" />
       </div>
 
       {/* Content */}
@@ -94,29 +95,26 @@ export default function Hero() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button 
             onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105"
+            className="px-8 py-4 gradient-button-primary rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 relative overflow-hidden group"
           >
+            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
             <i className="fas fa-rocket mr-2"></i>
             立即体验
-          </button>
-          <button className="px-8 py-4 glass border border-gray-700 rounded-lg font-semibold text-lg hover:bg-white hover:bg-opacity-10 transition-all duration-300">
-            <i className="fas fa-play-circle mr-2"></i>
-            观看演示
           </button>
         </div>
 
         <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gradient mb-2">98%</div>
-            <div className="text-sm text-gray-400">提升效果</div>
+          <div className="text-center group cursor-pointer">
+            <div className="text-4xl font-bold text-gradient-success mb-2 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]">98%</div>
+            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">提升效果</div>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gradient-blue mb-2">10K+</div>
-            <div className="text-sm text-gray-400">优化案例</div>
+          <div className="text-center group cursor-pointer">
+            <div className="text-4xl font-bold text-gradient-info mb-2 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">10K+</div>
+            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">优化案例</div>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gradient mb-2">6D</div>
-            <div className="text-sm text-gray-400">优化维度</div>
+          <div className="text-center group cursor-pointer">
+            <div className="text-4xl font-bold text-gradient-warning mb-2 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]">6D</div>
+            <div className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">优化维度</div>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { OptimizationState, Question } from '../types'
 import LoadingOptimization from './LoadingOptimization'
 import StreamingOptimizationProcess from './StreamingOptimizationProcess'
+import OptimizationQuestions from './OptimizationQuestions'
 
 interface OptimizationProcessProps {
   state: OptimizationState
@@ -143,53 +144,40 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
 
   if (state.stage === 'analyzing') {
     return (
-      <div className="mt-8 bg-white rounded-xl shadow-lg p-6 glass-effect animate-slide-up">
+      <div className="glass-card rounded-2xl p-6 animate-slide-up">
         <div className="flex items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mr-4"></div>
-          <p className="text-lg">正在分析你的需求...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mr-4"></div>
+          <p className="text-lg text-gray-300">正在分析你的需求...</p>
         </div>
       </div>
     )
   }
 
   if (state.stage === 'questioning') {
-    const currentQuestion = state.questions[currentQuestionIndex]
-    
     return (
-      <div className="mt-8 bg-white rounded-xl shadow-lg p-6 glass-effect animate-slide-up">
-        <h3 className="text-xl font-semibold mb-4">
-          优化问题 {currentQuestionIndex + 1} / {state.questions.length}
-        </h3>
-        
-        <p className="text-lg mb-4">{currentQuestion.text}</p>
-        
-        <textarea
-          value={currentAnswer}
-          onChange={(e) => setCurrentAnswer(e.target.value)}
-          placeholder="请输入你的回答..."
-          className="w-full h-24 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+      <div className="animate-slide-up">
+        <OptimizationQuestions
+          questions={state.questions}
+          onComplete={(allAnswers) => {
+            // All questions answered, start optimization
+            onStateChange({
+              ...state,
+              answers: allAnswers,
+              stage: 'optimizing'
+            })
+            // If streaming is disabled, call API
+            if (!useStreaming) {
+              optimizePrompt(state, allAnswers)
+            }
+          }}
+          onBack={() => {
+            // Go back to input stage
+            onStateChange({
+              ...state,
+              stage: 'input'
+            })
+          }}
         />
-        
-        <div className="mt-4 flex justify-between">
-          <button
-            onClick={() => {
-              setCurrentAnswer(state.answers[currentQuestion.id] || '')
-              setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))
-            }}
-            disabled={currentQuestionIndex === 0}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:text-gray-300"
-          >
-            上一个
-          </button>
-          
-          <button
-            onClick={handleAnswerSubmit}
-            disabled={!currentAnswer.trim()}
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:bg-gray-300"
-          >
-            {currentQuestionIndex < state.questions.length - 1 ? '下一个' : '开始优化'}
-          </button>
-        </div>
       </div>
     )
   }

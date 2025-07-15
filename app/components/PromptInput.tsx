@@ -25,30 +25,42 @@ export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl/Cmd + Enter 提交
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      if (prompt.trim()) {
+        onSubmit(prompt.trim())
+      }
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">输入你的初始想法</h2>
+    <div className="space-y-6 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-semibold text-center">输入你的初始想法</h2>
       
       <form onSubmit={handleSubmit}>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="例如：写一篇关于AI发展的文章..."
-          className="w-full h-32 p-4 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-white placeholder-gray-500"
+          className="w-full h-32 p-4 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none text-white placeholder-gray-500"
           disabled={disabled}
         />
         
         <button
           type="submit"
           disabled={disabled || !prompt.trim()}
-          className="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-lg font-medium hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-4 w-full gradient-button-primary text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group neon-teal"
         >
-          开始优化
+          <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+          <span className="relative">开始优化</span>
         </button>
       </form>
 
       <div className="mt-6">
-        <p className="text-sm text-gray-400 mb-3">或选择一个示例场景：</p>
+        <p className="text-sm text-gray-400 mb-3 text-center">或选择一个示例场景：</p>
         <div className="grid grid-cols-2 gap-2">
           {examplePrompts.map((example, index) => (
             <button
@@ -57,7 +69,7 @@ export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
               disabled={disabled}
               className="text-left p-3 glass border border-gray-700 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all duration-300 text-sm disabled:cursor-not-allowed"
             >
-              <span className="font-medium text-purple-400">{example.type}：</span>
+              <span className="font-medium text-teal-400">{example.type}：</span>
               <span className="text-gray-300">{example.text}</span>
             </button>
           ))}

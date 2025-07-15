@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { OptimizationState } from '../types'
 
 interface StreamingOptimizationProcessProps {
@@ -13,13 +13,38 @@ export default function StreamingOptimizationProcess({
   onComplete 
 }: StreamingOptimizationProcessProps) {
   const [streamedContent, setStreamedContent] = useState('')
+  const [displayContent, setDisplayContent] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
+  const displayIndexRef = useRef(0)
+  const animationFrameRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (state.stage === 'optimizing' && !isStreaming) {
       startStreaming()
     }
   }, [state.stage])
+
+  // Smooth text animation
+  useEffect(() => {
+    const animateText = () => {
+      if (displayIndexRef.current < streamedContent.length) {
+        const charsToAdd = Math.min(3, streamedContent.length - displayIndexRef.current)
+        setDisplayContent(streamedContent.substring(0, displayIndexRef.current + charsToAdd))
+        displayIndexRef.current += charsToAdd
+        animationFrameRef.current = requestAnimationFrame(animateText)
+      }
+    }
+
+    if (streamedContent.length > displayContent.length) {
+      animationFrameRef.current = requestAnimationFrame(animateText)
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [streamedContent, displayContent])
 
   const startStreaming = async () => {
     setIsStreaming(true)
@@ -54,7 +79,11 @@ export default function StreamingOptimizationProcess({
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
             if (data === '[DONE]') {
-              onComplete(fullContent)
+              // Ensure all content is displayed before completing
+              setStreamedContent(fullContent)
+              setDisplayContent(fullContent)
+              displayIndexRef.current = fullContent.length
+              setTimeout(() => onComplete(fullContent), 500)
               return
             }
 
@@ -80,45 +109,58 @@ export default function StreamingOptimizationProcess({
   if (state.stage !== 'optimizing') return null
 
   return (
-    <div className="mt-8 bg-white rounded-xl shadow-lg p-6 glass-effect animate-slide-up">
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">正在优化中...</h3>
+    <div className="glass-card rounded-2xl p-6 animate-slide-up">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center animate-pulse">
+              <i className="fas fa-magic text-white"></i>
+            </div>
+            <h3 className="text-xl font-semibold text-white">正在优化中</h3>
+          </div>
           {isStreaming && (
-            <div className="flex items-center text-sm text-gray-500">
-              <div className="animate-pulse mr-2">●</div>
+            <div className="flex items-center text-sm text-teal-400">
+              <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse mr-2"></div>
               实时生成中
             </div>
           )}
         </div>
-        <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-primary-600 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-300"
             style={{ 
-              width: streamedContent.length > 0 ? '100%' : '0%',
+              width: displayContent.length > 0 ? '100%' : '0%',
               animation: isStreaming ? 'pulse 2s infinite' : 'none'
             }}
           />
         </div>
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-        {streamedContent ? (
-          <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
-            {streamedContent}
-            {isStreaming && (
-              <span className="inline-block w-2 h-4 bg-gray-600 animate-pulse ml-1" />
+      <div className="bg-gray-900/50 rounded-xl p-6 max-h-96 overflow-y-auto border border-gray-800">
+        {displayContent ? (
+          <pre className="whitespace-pre-wrap text-gray-100 leading-relaxed font-sans transition-all duration-75">
+            {displayContent}
+            {isStreaming && displayIndexRef.current < streamedContent.length && (
+              <span className="inline-block w-0.5 h-5 bg-teal-400 animate-pulse ml-0.5" />
             )}
           </pre>
         ) : (
-          <p className="text-gray-500 italic">等待响应开始...</p>
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800 mb-4">
+              <i className="fas fa-spinner fa-spin text-2xl text-teal-400"></i>
+            </div>
+            <p className="text-gray-500">等待响应开始...</p>
+          </div>
         )}
       </div>
 
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <p className="text-xs text-blue-700">
-          💡 <strong>流式响应已启用</strong> - Claude Opus 4 正在深度思考并实时显示结果
-        </p>
+      <div className="mt-4 p-4 glass rounded-lg border border-teal-500/20">
+        <div className="flex items-start gap-2">
+          <i className="fas fa-info-circle text-teal-400 text-sm mt-0.5"></i>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            <strong>流式响应已启用</strong> - Claude Opus 4 正在深度思考并实时显示结果
+          </p>
+        </div>
       </div>
     </div>
   )

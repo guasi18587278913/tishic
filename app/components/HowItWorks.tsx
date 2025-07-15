@@ -47,14 +47,15 @@ export default function HowItWorks() {
               )}
               
               <div className="glass-dark rounded-2xl p-8 text-center relative group hover:transform hover:scale-105 transition-all duration-300">
-                {/* Step Number */}
-                <div className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold">
-                  {step.number}
-                </div>
-
-                {/* Icon */}
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center group-hover:from-purple-900 group-hover:to-pink-900 transition-all duration-300">
-                  <i className={`fas ${step.icon} text-3xl text-gray-400 group-hover:text-white transition-colors duration-300`}></i>
+                {/* Icon with integrated step number */}
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center group-hover:from-teal-900 group-hover:to-emerald-900 transition-all duration-300">
+                    <i className={`fas ${step.icon} text-3xl text-gray-400 group-hover:text-white transition-colors duration-300`}></i>
+                  </div>
+                  {/* Step Number Badge */}
+                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-xs font-bold shadow-lg">
+                    {step.number}
+                  </div>
                 </div>
 
                 {/* Content */}
