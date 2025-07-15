@@ -31,11 +31,6 @@ export default function SettingsPanel({
     // 读取自动保存设置
     const savedAutoSave = localStorage.getItem('auto-save-progress')
     setAutoSave(savedAutoSave !== 'false')
-    
-    // 读取模型设置
-    setSelectedModel(getUserPreferredModel())
-    const savedPriority = localStorage.getItem('model-priority') as any
-    setModelPriority(savedPriority || 'balanced')
   }, [])
 
   const handleTransitionChange = (effect: TransitionEffect) => {
