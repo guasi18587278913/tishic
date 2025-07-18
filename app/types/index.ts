@@ -6,7 +6,7 @@ export interface OptimizationState {
   promptType?: PromptType
   questions: Question[]
   answers: Record<string, string>
-  optimizedPrompt: string
+  optimizedPrompt?: string | null
   dimensions?: OptimizationDimensions
   isLoading?: boolean
   error?: {

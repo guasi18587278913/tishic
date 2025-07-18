@@ -177,19 +177,17 @@ export default function OptimizationFlow({
                   setOptimizationState({
                     ...optimizationState,
                     stage: 'input',
-                    optimizedPrompt: null
+                    optimizedPrompt: undefined
                   })
                 }}
                 onNewPrompt={() => {
                   setOptimizationState({
                     stage: 'input',
                     originalPrompt: '',
-                    promptType: null,
+                    promptType: undefined,
                     questions: [],
-                    userAnswers: {},
-                    optimizedPrompt: null,
-                    isOptimizing: false,
-                    dimensions: {}
+                    answers: {},
+                    optimizedPrompt: undefined
                   })
                 }}
               />
