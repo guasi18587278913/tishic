@@ -5,7 +5,7 @@ import { OptimizationState } from '../types'
 import PromptInput from './PromptInput'
 import OptimizationQuestions from './OptimizationQuestions'
 import OptimizationProcess from './OptimizationProcess'
-import OptimizedResult from './OptimizedResult'
+import OptimizationComplete from './OptimizationComplete'
 import { analyzePromptType } from '../lib/prompt-optimizer'
 
 interface OptimizationFlowProps {
@@ -106,59 +106,49 @@ export default function OptimizationFlow({
   const stepInfo = getStepInfo()
 
   return (
-    <section id="demo" className="min-h-screen flex flex-col">
-      {/* 固定顶部标题和进度 */}
-      <div className="pt-16 pb-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              <span className="text-gradient">智能优化助手</span>
-            </h2>
-            <p className="text-lg text-gray-400">让每一个提示词都达到最佳效果</p>
-          </div>
-
-          {/* 步骤指示器 */}
-          {optimizationState.stage !== 'input' && (
-            <div className="mb-8 animate-fade-in">
+    <div className="min-h-screen flex flex-col">
+      {/* 步骤指示器 - 只在优化完成页面不显示 */}
+      {optimizationState.stage !== 'input' && optimizationState.stage !== 'complete' && (
+        <div className="pt-8 pb-4 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-medium text-white">{stepInfo.title}</h3>
-                <span className="text-sm text-gray-400">
+                <h3 className="text-lg font-light text-white">{stepInfo.title}</h3>
+                <span className="text-sm font-light text-gray-400">
                   步骤 {stepInfo.step} / {stepInfo.total}
                 </span>
               </div>
-              <div className="relative h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div className="relative h-1 bg-white/5 rounded-full overflow-hidden">
                 <div 
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-700 ease-out"
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${(stepInfo.step / stepInfo.total) * 100}%` }}
                 />
                 {/* 动画光效 */}
                 <div 
-                  className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
+                  className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"
                   style={{ left: `${(stepInfo.step / stepInfo.total) * 100 - 5}%` }}
                 />
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 主内容区域 - 固定高度，内容切换 */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-16">
-        <div className="w-full max-w-4xl">
+      {/* 主内容区域 */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full">
           <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 transform scale-95' : 'opacity-100 transform scale-100'}`}>
-            {/* 输入阶段 */}
+            {/* 输入阶段 - 不需要额外容器 */}
             {optimizationState.stage === 'input' && (
-              <div className="glass-card rounded-2xl p-8 animate-fade-in">
-                <PromptInput 
-                  onSubmit={handlePromptSubmit}
-                  disabled={false}
-                />
-              </div>
+              <PromptInput 
+                onSubmit={handlePromptSubmit}
+                disabled={false}
+              />
             )}
 
             {/* 问题收集阶段 */}
             {optimizationState.stage === 'questioning' && (
-              <div className="glass-card rounded-2xl p-8 animate-slide-in">
+              <div className="max-w-4xl mx-auto backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 animate-slide-in">
                 <OptimizationProcess 
                   state={optimizationState}
                   onStateChange={setOptimizationState}
@@ -169,7 +159,7 @@ export default function OptimizationFlow({
 
             {/* 分析/优化阶段 */}
             {(optimizationState.stage === 'analyzing' || optimizationState.stage === 'optimizing') && (
-              <div className="glass-card rounded-2xl p-8 animate-fade-in">
+              <div className="max-w-4xl mx-auto backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-8 animate-fade-in">
                 <OptimizationProcess 
                   state={optimizationState}
                   onStateChange={setOptimizationState}
@@ -180,34 +170,46 @@ export default function OptimizationFlow({
 
             {/* 结果展示阶段 */}
             {optimizationState.stage === 'complete' && optimizationState.optimizedPrompt && (
-              <div className="glass-card rounded-2xl p-8 neon-teal animate-slide-in">
-                {console.log('Rendering OptimizedResult with:', {
-                  prompt: optimizationState.optimizedPrompt?.substring(0, 100) + '...',
-                  dimensions: optimizationState.dimensions
-                })}
-                <OptimizedResult 
-                  result={optimizationState.optimizedPrompt}
-                  originalPrompt={optimizationState.originalPrompt}
-                  dimensions={optimizationState.dimensions}
-                />
-              </div>
+              <OptimizationComplete 
+                originalPrompt={optimizationState.originalPrompt}
+                optimizedPrompt={optimizationState.optimizedPrompt}
+                onReoptimize={() => {
+                  setOptimizationState({
+                    ...optimizationState,
+                    stage: 'input',
+                    optimizedPrompt: null
+                  })
+                }}
+                onNewPrompt={() => {
+                  setOptimizationState({
+                    stage: 'input',
+                    originalPrompt: '',
+                    promptType: null,
+                    questions: [],
+                    userAnswers: {},
+                    optimizedPrompt: null,
+                    isOptimizing: false,
+                    dimensions: {}
+                  })
+                }}
+              />
             )}
             
             {/* 结果展示阶段 - 但没有优化结果的情况 */}
             {optimizationState.stage === 'complete' && !optimizationState.optimizedPrompt && (
-              <div className="glass-card rounded-2xl p-8 border-red-500/20 animate-slide-in">
+              <div className="max-w-4xl mx-auto backdrop-blur-xl bg-white/[0.03] border border-red-500/20 rounded-2xl p-8 animate-slide-in">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
                     <i className="fas fa-exclamation-triangle text-red-400"></i>
                   </div>
-                  <h3 className="text-xl font-semibold text-white">优化结果解析失败</h3>
+                  <h3 className="text-xl font-light text-white">优化结果解析失败</h3>
                 </div>
-                <p className="text-gray-400 mb-4">
+                <p className="text-gray-400 font-light mb-4">
                   抱歉，优化过程已完成但无法正确解析结果。这可能是由于API响应格式不符合预期。
                 </p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="gradient-button-primary text-white py-2 px-4 rounded-xl"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-gray-700 to-gray-800 text-white font-light hover:shadow-lg hover:shadow-white/10 transition-all duration-300"
                 >
                   重新开始
                 </button>
@@ -216,17 +218,17 @@ export default function OptimizationFlow({
             
             {/* 错误状态 */}
             {optimizationState.stage === 'error' && optimizationState.error && (
-              <div className="glass-card rounded-2xl p-8 border-red-500/50 animate-slide-in">
+              <div className="max-w-4xl mx-auto backdrop-blur-xl bg-white/[0.03] border border-red-500/30 rounded-2xl p-8 animate-slide-in">
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-                    <i className="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                    <i className="fas fa-exclamation-triangle text-2xl text-red-500/70"></i>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2 text-red-400">操作失败</h3>
-                  <p className="text-gray-400 mb-6">{optimizationState.error.message}</p>
+                  <h3 className="text-xl font-light mb-2 text-red-400">操作失败</h3>
+                  <p className="text-gray-400 font-light mb-6">{optimizationState.error.message}</p>
                   {optimizationState.error.retryable !== false && (
                     <button
                       onClick={() => setOptimizationState({ ...optimizationState, stage: 'input', error: undefined })}
-                      className="px-6 py-3 gradient-button-primary rounded-xl font-medium"
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-gray-700 to-gray-800 text-white font-light hover:shadow-lg hover:shadow-white/10 transition-all duration-300"
                     >
                       重新开始
                     </button>
@@ -237,7 +239,6 @@ export default function OptimizationFlow({
           </div>
         </div>
       </div>
-
-    </section>
+    </div>
   )
 }

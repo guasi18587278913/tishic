@@ -32,3 +32,26 @@ export interface OptimizationDimensions {
   formalConstraints: string
   qualityStandards: string
 }
+
+// 提示词生成器相关类型
+export interface PromptTemplate {
+  id: string
+  name: string
+  icon: string
+  description: string
+  color: string
+  gradient?: string
+  questions: TemplateQuestion[]
+  template: string
+  isCustom?: boolean
+}
+
+export interface TemplateQuestion {
+  id: string
+  question: string
+  placeholder: string
+}
+
+export type GeneratorStep = 'select-scene' | 'answer-questions' | 'custom'
+
+export type AppMode = 'unified' | 'generate' | 'optimize'

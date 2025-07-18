@@ -5,6 +5,7 @@ import { OptimizationState, Question } from '../types'
 import LoadingOptimization from './LoadingOptimization'
 import StreamingOptimizationProcess from './StreamingOptimizationProcess'
 import OptimizationQuestions from './OptimizationQuestions'
+import InstantOptimization from './InstantOptimization'
 import { debounce } from '../lib/api-utils'
 import { loadingManager } from './GlobalLoadingIndicator'
 
@@ -26,46 +27,11 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
   }, [state.stage])
 
   const analyzePrompt = async () => {
-    try {
-      loadingManager.show('正在分析你的需求...', 30)
-      
-      const response = await fetch('/api/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'analyze',
-          data: { prompt: state.originalPrompt }
-        })
-      })
-
-      const result = await response.json()
-      
-      loadingManager.show('分析完成，准备收集信息...', 70)
-      
-      onStateChange({
-        ...state,
-        stage: 'questioning',
-        promptType: result.promptType,
-        questions: result.questions
-      })
-      
-      loadingManager.hide()
-    } catch (error) {
-      console.error('分析失败:', error)
-      loadingManager.hide()
-      
-      // 使用默认值
-      onStateChange({
-        ...state,
-        stage: 'questioning',
-        promptType: 'creative',
-        questions: [
-          { id: '1', text: '你最想达到什么效果？', type: 'text' },
-          { id: '2', text: '有什么特别想避免的？', type: 'text' },
-          { id: '3', text: '有参考案例或风格偏好吗？', type: 'text' },
-        ]
-      })
-    }
+    // 直接跳转到优化阶段，使用即时优化组件
+    onStateChange({
+      ...state,
+      stage: 'optimizing'
+    })
   }
 
   const handleAnswerSubmit = () => {
@@ -195,84 +161,27 @@ export default function OptimizationProcess({ state, onStateChange, useStreaming
   }
 
   if (state.stage === 'optimizing') {
-    if (useStreaming) {
-      return (
-        <StreamingOptimizationProcess 
-          state={state}
-          onComplete={(result) => {
-            console.log('Stream complete, parsing result...')
-            console.log('Result length:', result.length)
-            console.log('Result preview:', result.substring(0, 300))
-            
-            // 解析流式响应的结果 - 尝试多种格式
-            let optimizedPrompt = ''
-            
-            // 扩展匹配模式，增加更多可能的格式
-            const patterns = [
-              /【优化后的提示词】\s*\n([\s\S]*?)(?=\n【六维度设定】|$)/,
-              /\*\*优化后的提示词\*\*\s*\n([\s\S]*?)(?=\n\*\*六维度设定\*\*|$)/,
-              /优化后的提示词[:：]\s*\n([\s\S]*?)(?=\n六维度|$)/i,
-              /## 优化后的提示词\s*\n([\s\S]*?)(?=\n## 六维度设定|$)/,
-              // 新增更灵活的模式
-              /优化后的提示词[：:]*\s*\n+([\s\S]*?)(?=六维度|【六维度|## 六维度|\*\*六维度|$)/i,
-              /【优化后的提示词】[：:]*\s*\n+([\s\S]*?)(?=【六维度|$)/,
-              /\*\*优化后的提示词\*\*[：:]*\s*\n+([\s\S]*?)(?=\*\*六维度|$)/,
-            ]
-            
-            for (const pattern of patterns) {
-              const match = result.match(pattern)
-              if (match && match[1].trim()) {
-                optimizedPrompt = match[1].trim()
-                console.log('Matched pattern:', pattern.toString())
-                break
-              }
+    return (
+      <InstantOptimization 
+        originalPrompt={state.originalPrompt}
+        onComplete={(optimizedPrompt) => {
+          // 优化完成后更新状态
+          onStateChange({
+            ...state,
+            stage: 'complete',
+            optimizedPrompt: optimizedPrompt,
+            dimensions: {
+              antiPatterns: ['避免空泛论述', '不要技术堆砌'],
+              sceneAtmosphere: '具体场景切入，微观视角',
+              styleDepth: '深度分析，专业风格',
+              coreFocus: '核心问题聚焦',
+              formalConstraints: '结构清晰，逻辑严密',
+              qualityStandards: '实用性强，易于理解'
             }
-            
-            // 如果没有匹配到特定格式，尝试提取到六维度之前的内容
-            if (!optimizedPrompt) {
-              // 更灵活的六维度匹配
-              const sixDimPattern = /(?:【?六维度[设定]*】?|\*\*六维度[设定]*\*\*|## 六维度[设定]*|六维度[设定]*[：:])/i
-              const sixDimIndex = result.search(sixDimPattern)
-              
-              if (sixDimIndex > 0) {
-                // 提取六维度之前的内容，并清理可能的标题
-                let content = result.substring(0, sixDimIndex).trim()
-                // 移除可能的标题行
-                content = content.replace(/^(?:【?优化后的提示词】?|\*\*优化后的提示词\*\*|## 优化后的提示词|优化后的提示词)[：:]*\s*/i, '')
-                optimizedPrompt = content.trim()
-                console.log('Extracted content before dimensions')
-              } else {
-                // 最后的fallback - 如果完全没有六维度部分，可能整个响应都是优化后的提示词
-                console.log('No dimension markers found, using entire response')
-                optimizedPrompt = result.trim()
-              }
-            }
-            
-            // 提取六维度
-            const dimensions = extractStreamedDimensions(result)
-            
-            console.log('Parsed prompt length:', optimizedPrompt.length)
-            console.log('Parsed dimensions:', dimensions)
-            
-            // 确保有实际内容
-            if (!optimizedPrompt || optimizedPrompt.trim().length === 0) {
-              console.error('No valid optimized prompt extracted')
-              // 使用原始结果作为fallback
-              optimizedPrompt = result.trim()
-            }
-            
-            onStateChange({
-              ...state,
-              stage: 'complete',
-              optimizedPrompt: optimizedPrompt.trim(),
-              dimensions
-            })
-          }}
-        />
-      )
-    } else {
-      return <LoadingOptimization />
-    }
+          })
+        }}
+      />
+    )
   }
 
   return null
