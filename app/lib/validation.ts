@@ -17,13 +17,111 @@ export class ValidationException extends Error {
   }
 }
 
+// XSS 防护：移除或转义危险的 HTML 标签和脚本
+export function sanitizeInput(input: string): string {
+  // 移除所有 script 标签及其内容
+  let sanitized = input.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  
+  // 移除所有 HTML 事件处理器
+  sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+  sanitized = sanitized.replace(/on\w+\s*=\s*[^\s>]*/gi, '')
+  
+  // 移除危险的 HTML 标签
+  const dangerousTags = ['iframe', 'object', 'embed', 'link', 'style', 'base', 'form', 'meta']
+  dangerousTags.forEach(tag => {
+    const regex = new RegExp(`<${tag}[^>]*>|</${tag}>`, 'gi')
+    sanitized = sanitized.replace(regex, '')
+  })
+  
+  // 移除危险的协议
+  sanitized = sanitized.replace(/javascript:/gi, '')
+  sanitized = sanitized.replace(/vbscript:/gi, '')
+  sanitized = sanitized.replace(/data:text\/html/gi, '')
+  
+  // 移除 HTML 实体中的危险内容
+  sanitized = sanitized.replace(/&#x?[0-9a-fA-F]+;?/g, (match) => {
+    // 保留常见的安全实体
+    const safeEntities = ['&lt;', '&gt;', '&amp;', '&quot;', '&#39;']
+    return safeEntities.includes(match) ? match : ''
+  })
+  
+  return sanitized.trim()
+}
+
+// 检查敏感信息
+function checkSensitiveInfo(value: string, field: string): void {
+  const sensitivePatterns = [
+    { pattern: /api[_-]?key/i, message: 'API密钥' },
+    { pattern: /password/i, message: '密码' },
+    { pattern: /secret/i, message: '密钥' },
+    { pattern: /token/i, message: '令牌' },
+    { pattern: /private[_-]?key/i, message: '私钥' },
+    { pattern: /credit[_-]?card/i, message: '信用卡信息' },
+    { pattern: /ssn/i, message: '社保号' },
+    { pattern: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/, message: '信用卡号' }
+  ]
+  
+  for (const { pattern, message } of sensitivePatterns) {
+    if (pattern.test(value)) {
+      throw new ValidationException([{
+        field,
+        message: `${field} 中包含敏感信息：${message}`
+      }])
+    }
+  }
+}
+
+// 检查注入攻击
+function checkInjectionAttacks(value: string, field: string): void {
+  // SQL 注入模式
+  const sqlInjectionPatterns = [
+    /union\s+select/i,
+    /delete\s+from/i,
+    /drop\s+(table|database)/i,
+    /update\s+\w+\s+set/i,
+    /insert\s+into/i,
+    /exec(\s|\()/i,
+    /execute(\s|\()/i
+  ]
+  
+  for (const pattern of sqlInjectionPatterns) {
+    if (pattern.test(value)) {
+      throw new ValidationException([{
+        field,
+        message: `${field} 中包含不允许的SQL语句`
+      }])
+    }
+  }
+  
+  // 命令注入模式
+  const cmdInjectionPatterns = [
+    /[;&|`$]/,
+    /\$\(/,
+    /\|\|/,
+    /&&/
+  ]
+  
+  // 只在非 Markdown 代码块中检查命令注入
+  if (!value.includes('```')) {
+    for (const pattern of cmdInjectionPatterns) {
+      if (pattern.test(value)) {
+        throw new ValidationException([{
+          field,
+          message: `${field} 中包含不允许的命令字符`
+        }])
+      }
+    }
+  }
+}
+
 // Validation functions
 export function validateString(value: any, field: string, options?: {
   minLength?: number
   maxLength?: number
   required?: boolean
+  sanitize?: boolean
 }): string | undefined {
-  const { minLength = 0, maxLength = 100000, required = true } = options || {}
+  const { minLength = 0, maxLength = 100000, required = true, sanitize = true } = options || {}
   
   if (!value && !required) {
     return undefined
@@ -36,7 +134,9 @@ export function validateString(value: any, field: string, options?: {
     }])
   }
   
-  const trimmed = value.trim()
+  // 先进行 XSS 清理
+  const cleaned = sanitize ? sanitizeInput(value) : value
+  const trimmed = cleaned.trim()
   
   if (trimmed.length < minLength) {
     throw new ValidationException([{
@@ -50,6 +150,12 @@ export function validateString(value: any, field: string, options?: {
       field,
       message: `${field} must not exceed ${maxLength} characters`
     }])
+  }
+  
+  // 检查敏感信息和注入攻击
+  if (sanitize) {
+    checkSensitiveInfo(trimmed, field)
+    checkInjectionAttacks(trimmed, field)
   }
   
   return trimmed
@@ -77,7 +183,15 @@ export function validateAnswers(value: any): Record<string, string> {
   
   for (const [key, val] of Object.entries(value)) {
     if (typeof val === 'string') {
-      validated[key] = val.trim()
+      // 对答案也进行清理
+      const sanitized = sanitizeInput(val.trim())
+      if (sanitized.length > 1000) {
+        throw new ValidationException([{
+          field: `answers.${key}`,
+          message: `Answer for ${key} is too long (max 1000 characters)`
+        }])
+      }
+      validated[key] = sanitized
     }
   }
   
@@ -117,7 +231,7 @@ export function validateAnalyzeRequest(body: any): AnalyzeRequestBody {
   }
   
   const prompt = validateString(body.data.prompt, 'prompt', {
-    minLength: 1,
+    minLength: 10,
     maxLength: 10000
   })!
   
@@ -143,7 +257,7 @@ export function validateOptimizeRequest(body: any): OptimizeRequestBody {
   }
   
   const originalPrompt = validateString(body.data.originalPrompt, 'originalPrompt', {
-    minLength: 1,
+    minLength: 10,
     maxLength: 10000
   })!
   
@@ -166,7 +280,7 @@ export function validateStreamRequest(body: any): {
   answers: Record<string, string>
 } {
   const originalPrompt = validateString(body.originalPrompt, 'originalPrompt', {
-    minLength: 1,
+    minLength: 10,
     maxLength: 10000
   })!
   

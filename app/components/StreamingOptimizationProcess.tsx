@@ -19,10 +19,20 @@ export default function StreamingOptimizationProcess({
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   const displayIndexRef = useRef(0)
   const animationFrameRef = useRef<number | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (state.stage === 'optimizing' && !isStreaming) {
       startStreaming()
+    }
+    
+    // 清理函数
+    return () => {
+      // 取消正在进行的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
     }
   }, [state.stage])
 
@@ -44,6 +54,7 @@ export default function StreamingOptimizationProcess({
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
+        animationFrameRef.current = null
       }
     }
   }, [streamedContent, displayContent])
@@ -52,6 +63,7 @@ export default function StreamingOptimizationProcess({
     setIsStreaming(true)
     let fullContent = ''
     const abortController = new AbortController()
+    abortControllerRef.current = abortController
     let retryCount = 0
     const maxRetries = 3
 
@@ -157,6 +169,10 @@ export default function StreamingOptimizationProcess({
         setDisplayContent('优化过程中出现错误，请重试。错误信息：' + (error instanceof Error ? error.message : 'Unknown error'))
       } finally {
         setIsStreaming(false)
+        // 清理 abortController 引用
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null
+        }
       }
     }
 

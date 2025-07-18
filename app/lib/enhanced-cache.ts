@@ -15,10 +15,13 @@ class EnhancedOptimizationCache {
   private maxAge = 1000 * 60 * 60 * 24 * 7 // 7天
   private maxSize = 500 // 最大缓存数量
   private storageKey = 'prompt-optimizer-cache'
+  private isClient = typeof window !== 'undefined'
+  private saveTimeout: NodeJS.Timeout | null = null
+  private saveDebounceMs = 1000 // 防抖延迟时间
 
   constructor() {
     // 启动时从 localStorage 加载缓存
-    if (typeof window !== 'undefined') {
+    if (this.isClient) {
       this.loadFromStorage()
     }
   }
@@ -30,12 +33,36 @@ class EnhancedOptimizationCache {
       return acc
     }, {} as Record<string, string>)
     
-    return btoa(encodeURIComponent(`${prompt.trim()}-${JSON.stringify(sortedAnswers)}`))
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .substring(0, 64)
+    // 使用更安全的编码方式，避免 btoa 对非 ASCII 字符的问题
+    const keyString = `${prompt.trim()}-${JSON.stringify(sortedAnswers)}`
+    
+    // 简单的哈希函数
+    let hash = 0
+    for (let i = 0; i < keyString.length; i++) {
+      const char = keyString.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32bit integer
+    }
+    
+    return `cache_${Math.abs(hash)}_${keyString.length}`
+  }
+
+  private isStorageAvailable(): boolean {
+    if (!this.isClient) return false
+    
+    try {
+      const testKey = '__storage_test__'
+      localStorage.setItem(testKey, 'test')
+      localStorage.removeItem(testKey)
+      return true
+    } catch {
+      return false
+    }
   }
 
   private loadFromStorage(): void {
+    if (!this.isStorageAvailable()) return
+    
     try {
       const stored = localStorage.getItem(this.storageKey)
       if (stored) {
@@ -52,20 +79,37 @@ class EnhancedOptimizationCache {
   }
 
   private saveToStorage(): void {
-    try {
-      const items = Array.from(this.memoryCache.values())
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, this.maxSize)
-      
-      localStorage.setItem(this.storageKey, JSON.stringify(items))
-    } catch (error) {
-      console.error('Failed to save cache to storage:', error)
-      // 如果存储空间满了，清理旧数据
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        this.cleanup()
-        this.saveToStorage()
-      }
+    if (!this.isStorageAvailable()) return
+    
+    // 使用防抖，避免频繁写入
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout)
     }
+    
+    this.saveTimeout = setTimeout(() => {
+      try {
+        const items = Array.from(this.memoryCache.values())
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, this.maxSize)
+        
+        localStorage.setItem(this.storageKey, JSON.stringify(items))
+      } catch (error) {
+        console.error('Failed to save cache to storage:', error)
+        // 如果存储空间满了，清理旧数据
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          this.cleanup()
+          // 递归调用可能导致无限循环，改为直接尝试保存一半的数据
+          try {
+            const items = Array.from(this.memoryCache.values())
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .slice(0, Math.floor(this.maxSize / 2))
+            localStorage.setItem(this.storageKey, JSON.stringify(items))
+          } catch {
+            console.error('Failed to save cache even after cleanup')
+          }
+        }
+      }
+    }, this.saveDebounceMs)
   }
 
   get(prompt: string, answers: Record<string, string>): CacheItem | null {
@@ -110,8 +154,8 @@ class EnhancedOptimizationCache {
       this.cleanup()
     }
     
-    // 异步保存到 localStorage
-    setTimeout(() => this.saveToStorage(), 0)
+    // 异步保存到 localStorage（使用防抖）
+    this.saveToStorage()
   }
 
   private cleanup(): void {
@@ -128,7 +172,14 @@ class EnhancedOptimizationCache {
 
   clear(): void {
     this.memoryCache.clear()
-    localStorage.removeItem(this.storageKey)
+    if (this.isStorageAvailable()) {
+      localStorage.removeItem(this.storageKey)
+    }
+    // 清理定时器
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout)
+      this.saveTimeout = null
+    }
   }
 
   // 预加载相关提示词的优化结果
