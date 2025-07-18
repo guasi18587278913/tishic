@@ -137,7 +137,7 @@ export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
       </form>
 
       {/* 底部流程说明 */}
-      <div className="mt-16 flex justify-center items-center gap-8 opacity-50 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+      <div className="mt-16 flex justify-center items-center gap-8 animate-fade-in" style={{ animationDelay: '0.5s' }}>
         {[
           { icon: '1', label: '智能分析' },
           { icon: '2', label: '深度优化' },
@@ -145,13 +145,13 @@ export default function PromptInput({ onSubmit, disabled }: PromptInputProps) {
         ].map((step, index) => (
           <div key={index} className="flex items-center gap-8">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-full border border-purple-600/30 flex items-center justify-center text-sm font-light text-gray-400">
+              <div className="w-10 h-10 rounded-full border border-purple-500/50 bg-purple-500/10 flex items-center justify-center text-sm font-light text-purple-300">
                 {step.icon}
               </div>
-              <span className="text-xs font-light text-gray-500">{step.label}</span>
+              <span className="text-xs font-light text-gray-400">{step.label}</span>
             </div>
             {index < 2 && (
-              <div className="w-16 h-px bg-gradient-to-r from-purple-600/20 to-transparent" />
+              <div className="w-16 h-px bg-gradient-to-r from-purple-500/30 to-transparent" />
             )}
           </div>
         ))}
