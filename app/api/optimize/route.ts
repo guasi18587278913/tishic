@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzePromptType, generateQuestions, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { OpenRouterAPI } from '@/app/lib/openrouter-api'
 import { enhancedCache } from '@/app/lib/enhanced-cache'
 import { validateAnalyzeRequest, validateOptimizeRequest, ValidationException } from '@/app/lib/validation'
-import { getGoogleApiKey, logEnvInfo } from '@/app/lib/env-validation'
+import { getGoogleApiKey, getOpenRouterApiKey, getApiProvider, getModelName, logEnvInfo } from '@/app/lib/env-validation'
 
 export async function POST(request: NextRequest) {
   try {
@@ -76,48 +77,76 @@ export async function POST(request: NextRequest) {
           })
         }
         
-        // 检查是否配置了 API Key
-        let apiKey: string
-        try {
-          apiKey = getGoogleApiKey()
-        } catch (error) {
-          console.error('API Key not configured:', error)
-          // 返回 mock 数据
-          return NextResponse.json({
-            optimizedPrompt: generateMockOptimizedPrompt(originalPrompt),
-            dimensions: {
-              antiPatterns: ['避免空泛论述', '不要技术堆砌'],
-              sceneAtmosphere: '具体场景设定',
-              styleDepth: '独特的表达风格',
-              coreFocus: '核心论点聚焦',
-              formalConstraints: '结构和格式约束',
-              qualityStandards: '明确的成功标准'
-            }
-          })
-        }
-
         // 记录环境信息（仅在开发环境）
         if (process.env.NODE_ENV === 'development') {
           logEnvInfo()
         }
-        
-        // 使用 Gemini API
-        const genAI = new GoogleGenerativeAI(apiKey)
-        const model = genAI.getGenerativeModel({ 
-          model: 'gemini-1.5-pro-latest',
-          generationConfig: {
-            maxOutputTokens: 32768,
-            temperature: 0.7,
-          }
-        })
 
-        // 构建优化提示词
-        const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, finalAnswers)
+        // 根据 API 提供商选择不同的处理方式
+        const provider = getApiProvider()
+        let text: string
         
-        // 调用 Gemini
-        const result = await model.generateContent(optimizationPrompt)
-        const response = result.response
-        const text = response.text()
+        if (provider === 'openrouter') {
+          // 使用 OpenRouter API
+          let apiKey: string
+          try {
+            apiKey = getOpenRouterApiKey()
+          } catch (error) {
+            console.error('OpenRouter API Key not configured:', error)
+            return NextResponse.json({
+              optimizedPrompt: generateMockOptimizedPrompt(originalPrompt),
+              dimensions: {
+                antiPatterns: ['避免空泛论述', '不要技术堆砌'],
+                sceneAtmosphere: '具体场景设定',
+                styleDepth: '独特的表达风格',
+                coreFocus: '核心论点聚焦',
+                formalConstraints: '结构和格式约束',
+                qualityStandards: '明确的成功标准'
+              }
+            })
+          }
+          
+          const openRouter = new OpenRouterAPI(apiKey, getModelName())
+          const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, finalAnswers)
+          
+          text = await openRouter.sendMessage([
+            { role: 'system', content: '你是一个专业的提示词优化专家，精通六维度优化框架。' },
+            { role: 'user', content: optimizationPrompt }
+          ])
+        } else {
+          // 使用 Google Gemini API
+          let apiKey: string
+          try {
+            apiKey = getGoogleApiKey()
+          } catch (error) {
+            console.error('Google API Key not configured:', error)
+            return NextResponse.json({
+              optimizedPrompt: generateMockOptimizedPrompt(originalPrompt),
+              dimensions: {
+                antiPatterns: ['避免空泛论述', '不要技术堆砌'],
+                sceneAtmosphere: '具体场景设定',
+                styleDepth: '独特的表达风格',
+                coreFocus: '核心论点聚焦',
+                formalConstraints: '结构和格式约束',
+                qualityStandards: '明确的成功标准'
+              }
+            })
+          }
+          
+          const genAI = new GoogleGenerativeAI(apiKey)
+          const model = genAI.getGenerativeModel({ 
+            model: 'gemini-1.5-pro-latest',
+            generationConfig: {
+              maxOutputTokens: 32768,
+              temperature: 0.7,
+            }
+          })
+          
+          const optimizationPrompt = buildOptimizationPrompt(originalPrompt, type, finalAnswers)
+          const result = await model.generateContent(optimizationPrompt)
+          const response = result.response
+          text = response.text()
+        }
         
         console.log('=== Gemini Response Debug ===')
         console.log('Response length:', text.length)

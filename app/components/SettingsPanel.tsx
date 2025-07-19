@@ -7,6 +7,7 @@ import {
   getUserTransitionPreference,
   saveUserTransitionPreference
 } from '../lib/transition-effects'
+import { getModelInfo } from '../lib/model-config'
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -24,6 +25,7 @@ export default function SettingsPanel({
   const [selectedTransition, setSelectedTransition] = useState<TransitionEffect>('fade')
   const [showPreview, setShowPreview] = useState(false)
   const [autoSave, setAutoSave] = useState(true)
+  const [modelInfo, setModelInfo] = useState<any>(null)
 
   useEffect(() => {
     setSelectedTransition(getUserTransitionPreference())
@@ -31,6 +33,10 @@ export default function SettingsPanel({
     // 读取自动保存设置
     const savedAutoSave = localStorage.getItem('auto-save-progress')
     setAutoSave(savedAutoSave !== 'false')
+    
+    // 获取模型信息
+    const model = getModelInfo('google/gemini-2.5-pro')
+    setModelInfo(model)
   }, [])
 
   const handleTransitionChange = (effect: TransitionEffect) => {
@@ -114,8 +120,8 @@ export default function SettingsPanel({
                   <i className="fas fa-gem text-white"></i>
                 </div>
                 <div>
-                  <h4 className="font-medium">Gemini 2.5 Pro</h4>
-                  <p className="text-sm text-gray-400">Google 最新 AI 模型</p>
+                  <h4 className="font-medium">{modelInfo?.name || 'Gemini 2.5 Pro'}</h4>
+                  <p className="text-sm text-gray-400">{modelInfo?.description || 'Google 最新 AI 模型'}</p>
                 </div>
               </div>
               <div className="text-sm text-gray-400 space-y-2">
@@ -125,12 +131,18 @@ export default function SettingsPanel({
                 </div>
                 <div className="flex items-center gap-2">
                   <i className="fas fa-check-circle text-teal-400"></i>
-                  <span>支持超长输出（32768 tokens）</span>
+                  <span>支持超长输出（{modelInfo?.maxTokens || 32768} tokens）</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <i className="fas fa-check-circle text-teal-400"></i>
-                  <span>快速响应，性能稳定</span>
+                  <span>{modelInfo?.speed || '快速'}响应，性能稳定</span>
                 </div>
+                {modelInfo?.cost && (
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-dollar-sign text-teal-400"></i>
+                    <span>成本：{modelInfo.cost}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

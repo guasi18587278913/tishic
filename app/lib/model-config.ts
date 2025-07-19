@@ -1,15 +1,15 @@
 // 模型配置 - 使用 Gemini 2.5 Pro
 
 export const MODEL_CONFIGS = {
-  // Gemini 2.5 Pro - Google 最新模型
+  // Gemini 2.5 Pro - Google 最新模型 (通过 OpenRouter)
   'gemini-2.5-pro': {
-    id: 'google/gemini-pro-1.5-latest',
+    id: 'google/gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
     description: 'Google 最新模型，中文理解能力强，性能优秀',
     speed: '快速',
     cost: '$3.5/$10.5 per M tokens',
-    qualityScore: 9,
-    speedScore: 8,
+    qualityScore: 10,
+    speedScore: 9,
     maxTokens: 32768, // 支持超长输出
   },
 }
