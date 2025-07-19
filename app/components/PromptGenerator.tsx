@@ -299,58 +299,132 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
     )
     const progress = (Object.keys(answers).filter(key => answers[key]?.trim()).length / selectedTemplate.questions.length) * 100
 
-    return (
-      <div className="animate-fade-in max-w-3xl mx-auto">
-        {/* 进度条 */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-3xl font-extralight text-white">{selectedTemplate.name}</h2>
-            <span className="text-sm font-light text-gray-400">
-              {Math.round(progress)}% 完成
-            </span>
-          </div>
-          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-            <div 
-              className={`h-full bg-gradient-to-r ${selectedTemplate.gradient} transition-all duration-300`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
+    // 获取场景对应的主题色样式
+    const getThemeStyles = () => {
+      const colorMap: Record<string, {
+        glow: string
+        border: string
+        borderActive: string
+        bg: string
+        bgActive: string
+        text: string
+        accent: string
+      }> = {
+        'from-purple-400 to-pink-500': {
+          glow: 'from-purple-500/20 to-pink-500/20',
+          border: 'border-purple-500/20',
+          borderActive: 'border-purple-500/40',
+          bg: 'bg-purple-500/5',
+          bgActive: 'bg-purple-500/10',
+          text: 'text-purple-400',
+          accent: 'text-purple-300'
+        },
+        'from-green-400 to-teal-500': {
+          glow: 'from-green-500/20 to-teal-500/20',
+          border: 'border-green-500/20',
+          borderActive: 'border-green-500/40',
+          bg: 'bg-green-500/5',
+          bgActive: 'bg-green-500/10',
+          text: 'text-green-400',
+          accent: 'text-green-300'
+        },
+        'from-yellow-400 to-orange-500': {
+          glow: 'from-yellow-500/20 to-orange-500/20',
+          border: 'border-orange-500/20',
+          borderActive: 'border-orange-500/40',
+          bg: 'bg-orange-500/5',
+          bgActive: 'bg-orange-500/10',
+          text: 'text-orange-400',
+          accent: 'text-orange-300'
+        },
+        'from-orange-400 to-red-500': {
+          glow: 'from-orange-500/20 to-red-500/20',
+          border: 'border-orange-500/20',
+          borderActive: 'border-orange-500/40',
+          bg: 'bg-orange-500/5',
+          bgActive: 'bg-orange-500/10',
+          text: 'text-orange-400',
+          accent: 'text-orange-300'
+        },
+        'from-pink-400 to-rose-500': {
+          glow: 'from-pink-500/20 to-rose-500/20',
+          border: 'border-pink-500/20',
+          borderActive: 'border-pink-500/40',
+          bg: 'bg-pink-500/5',
+          bgActive: 'bg-pink-500/10',
+          text: 'text-pink-400',
+          accent: 'text-pink-300'
+        }
+      }
+      
+      return colorMap[selectedTemplate.gradient] || colorMap['from-purple-400 to-pink-500']
+    }
 
-        {/* 问题列表 */}
-        <div className="space-y-6">
-          {selectedTemplate.questions.map((question, index) => (
-            <div 
-              key={question.id}
-              className={`p-8 rounded-2xl backdrop-blur-xl bg-white/5 border transition-all duration-300 ${
-                index === currentQuestionIndex ? 'border-white/20 scale-[1.02]' : 'border-white/10'
-              }`}
-            >
-              <label className="block text-lg font-light text-white mb-4">
-                {index + 1}. {question.question}
-              </label>
-              <input
-                type="text"
-                value={answers[question.id] || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                placeholder={question.placeholder}
-                className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-200 font-light"
+    const theme = getThemeStyles()
+
+    return (
+      <div className="animate-fade-in max-w-3xl mx-auto relative">
+        {/* 主题色背景光晕 */}
+        <div className={`absolute -inset-32 bg-gradient-to-r ${selectedTemplate.gradient} blur-3xl opacity-20 pointer-events-none`} />
+        
+        <div className="relative">
+          {/* 进度条 */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-3xl font-extralight text-white">{selectedTemplate.name}</h2>
+              <span className={`text-sm font-light ${theme.text}`}>
+                {Math.round(progress)}% 完成
+              </span>
+            </div>
+            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className={`h-full bg-gradient-to-r ${selectedTemplate.gradient} transition-all duration-300`}
+                style={{ width: `${progress}%` }}
               />
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* 问题列表 */}
+          <div className="space-y-6">
+            {selectedTemplate.questions.map((question, index) => (
+              <div 
+                key={question.id}
+                className={`p-8 rounded-2xl backdrop-blur-xl ${
+                  index === currentQuestionIndex ? theme.bgActive : theme.bg
+                } border transition-all duration-300 ${
+                  index === currentQuestionIndex 
+                    ? `${theme.borderActive} scale-[1.02]` 
+                    : theme.border
+                }`}
+              >
+                <label className="block text-lg font-light text-white mb-4">
+                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${theme.bg} ${theme.border} ${theme.accent} text-sm mr-3`}>
+                    {index + 1}
+                  </span>
+                  {question.question}
+                </label>
+                <input
+                  type="text"
+                  value={answers[question.id] || ''}
+                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                  placeholder={question.placeholder}
+                  className={`w-full px-6 py-4 ${theme.bg} border ${theme.border} rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all duration-200 font-light ${index === currentQuestionIndex ? `${theme.borderActive} ${theme.bgActive}` : ''} focus:${theme.borderActive} focus:${theme.bgActive}`}
+                />
+              </div>
+            ))}
+          </div>
 
         {/* 额外说明 */}
-        <div className="mt-8 p-8 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10">
+        <div className={`mt-8 p-8 rounded-2xl backdrop-blur-xl ${theme.bg} border ${theme.border}`}>
           <label className="block text-lg font-light text-white mb-4">
-            <i className="fas fa-plus-circle text-teal-400 mr-2"></i>
+            <i className={`fas fa-plus-circle ${theme.text} mr-2`}></i>
             额外说明（可选）
           </label>
           <textarea
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder="如果有其他特殊要求，请在这里补充..."
-            className="w-full h-32 px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all duration-200 resize-none font-light"
+            className={`w-full h-32 px-6 py-4 ${theme.bg} border ${theme.border} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:${theme.borderActive} focus:${theme.bgActive} transition-all duration-200 resize-none font-light`}
           />
         </div>
 
@@ -368,7 +442,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
             disabled={!isAllQuestionsAnswered() || isGenerating}
             className={`flex-1 py-4 rounded-xl font-light transition-all duration-300 ${
               isAllQuestionsAnswered() 
-                ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white hover:shadow-lg hover:shadow-teal-500/25' 
+                ? `bg-gradient-to-r ${selectedTemplate.gradient} text-white hover:shadow-lg hover:shadow-${selectedTemplate.color}-500/25` 
                 : 'bg-white/5 text-gray-500 cursor-not-allowed'
             }`}
           >
