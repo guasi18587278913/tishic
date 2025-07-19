@@ -1,6 +1,17 @@
-// 模型配置 - 使用 Gemini 2.5 Pro
+// 模型配置 - 使用 Gemini 2.5 Flash
 
 export const MODEL_CONFIGS = {
+  // Gemini 2.5 Flash - Google 快速模型 (通过 OpenRouter)
+  'gemini-2.5-flash': {
+    id: 'google/gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Google 高速模型，响应快速，成本低廉',
+    speed: '极快',
+    cost: '$0.075/$0.3 per M tokens',
+    qualityScore: 8,
+    speedScore: 10,
+    maxTokens: 32768, // 支持超长输出
+  },
   // Gemini 2.5 Pro - Google 最新模型 (通过 OpenRouter)
   'gemini-2.5-pro': {
     id: 'google/gemini-2.5-pro',
@@ -14,8 +25,8 @@ export const MODEL_CONFIGS = {
   },
 }
 
-// 默认使用 Gemini 2.5 Pro
-export const DEFAULT_MODEL = MODEL_CONFIGS['gemini-2.5-pro'].id
+// 默认使用 Gemini 2.5 Flash
+export const DEFAULT_MODEL = MODEL_CONFIGS['gemini-2.5-flash'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {

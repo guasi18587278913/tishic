@@ -45,6 +45,12 @@ export class OpenRouterAPI {
             messages,
             max_tokens: 16000, // 增加到 16000 以支持完整输出
             temperature: 0.7,
+            top_p: 0.9,
+            presence_penalty: 0,
+            frequency_penalty: 0,
+            // 尝试禁用 reasoning 输出
+            reasoning: false,
+            show_reasoning: false,
           }),
         })
 

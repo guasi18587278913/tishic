@@ -35,7 +35,7 @@ export default function SettingsPanel({
     setAutoSave(savedAutoSave !== 'false')
     
     // 获取模型信息
-    const model = getModelInfo('google/gemini-2.5-pro')
+    const model = getModelInfo('google/gemini-2.5-flash')
     setModelInfo(model)
   }, [])
 
