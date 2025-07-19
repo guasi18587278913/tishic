@@ -52,6 +52,6 @@ export interface TemplateQuestion {
   placeholder: string
 }
 
-export type GeneratorStep = 'select-scene' | 'answer-questions' | 'custom'
+export type GeneratorStep = 'select-scene' | 'answer-questions' | 'custom' | 'show-result'
 
 export type AppMode = 'unified' | 'generate' | 'optimize'

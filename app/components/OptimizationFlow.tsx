@@ -58,27 +58,17 @@ export default function OptimizationFlow({
     
     setIsTransitioning(true)
     timeoutRef.current = setTimeout(() => {
-      if (isQuickOptimize) {
-        // 快速优化：跳过问题收集，直接进入优化阶段
-        const promptType = analyzePromptType(cleanPrompt)
-        setOptimizationState({
-          ...optimizationState,
-          originalPrompt: cleanPrompt,
-          stage: 'optimizing',
-          promptType: promptType,
-          questions: [],
-          answers: {}, // 使用空答案，API会使用智能默认值
-          error: undefined
-        })
-      } else {
-        // 常规流程
-        setOptimizationState({
-          ...optimizationState,
-          originalPrompt: cleanPrompt,
-          stage: 'analyzing',
-          error: undefined
-        })
-      }
+      // 直接进入优化阶段，使用新的优化模板
+      const promptType = analyzePromptType(cleanPrompt)
+      setOptimizationState({
+        ...optimizationState,
+        originalPrompt: cleanPrompt,
+        stage: 'optimizing',
+        promptType: promptType,
+        questions: [],
+        answers: {}, // 不再需要问题答案
+        error: undefined
+      })
       setIsTransitioning(false)
     }, 300)
   }
@@ -87,19 +77,17 @@ export default function OptimizationFlow({
   const getStepInfo = (): { step: number; total: number; title: string } => {
     switch (optimizationState.stage) {
       case 'input':
-        return { step: 1, total: 4, title: '输入初始想法' }
+        return { step: 1, total: 3, title: '输入初始想法' }
       case 'analyzing':
-        return { step: 2, total: 4, title: '分析中...' }
-      case 'questioning':
-        return { step: 2, total: 4, title: '优化信息收集' }
+        return { step: 2, total: 3, title: '分析中...' }
       case 'optimizing':
-        return { step: 3, total: 4, title: '生成优化结果' }
+        return { step: 2, total: 3, title: '生成优化结果' }
       case 'complete':
-        return { step: 4, total: 4, title: '优化完成' }
+        return { step: 3, total: 3, title: '优化完成' }
       case 'error':
-        return { step: 1, total: 4, title: '出现错误' }
+        return { step: 1, total: 3, title: '出现错误' }
       default:
-        return { step: 1, total: 4, title: '开始' }
+        return { step: 1, total: 3, title: '开始' }
     }
   }
 

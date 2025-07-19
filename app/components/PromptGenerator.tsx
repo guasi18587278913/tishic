@@ -94,6 +94,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [customPrompt, setCustomPrompt] = useState(initialInput || '')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generatedPrompt, setGeneratedPrompt] = useState<string>('')
 
   const handleTemplateSelect = (template: PromptTemplate) => {
     if (template.isCustom) {
@@ -139,7 +140,8 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
 
     setTimeout(() => {
       setIsGenerating(false)
-      onGenerate(enhancedPrompt.trim())
+      setGeneratedPrompt(enhancedPrompt.trim())
+      setCurrentStep('show-result')
     }, 1000)
   }
 
@@ -489,7 +491,21 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
           返回
         </button>
         <button
-          onClick={() => onGenerate(customPrompt)}
+          onClick={() => {
+            // 为自定义提示词设置一个特殊的模板
+            setSelectedTemplate({
+              id: 'custom',
+              name: '自定义提示词',
+              icon: 'fa-plus',
+              description: '直接编写的提示词',
+              color: 'emerald',
+              gradient: 'from-emerald-400 to-teal-500',
+              questions: [],
+              template: ''
+            })
+            setGeneratedPrompt(customPrompt)
+            setCurrentStep('show-result')
+          }}
           disabled={!customPrompt.trim()}
           className={`flex-1 py-4 rounded-xl font-light transition-all duration-300 ${
             customPrompt.trim() 
@@ -499,12 +515,150 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
         >
           <span className="flex items-center justify-center gap-2">
             <i className="fas fa-arrow-right"></i>
-            直接优化
+            生成提示词
           </span>
         </button>
       </div>
     </div>
   )
+
+  const renderResult = () => {
+    // 获取当前场景的颜色主题
+    const currentGradient = selectedTemplate?.gradient || 'from-emerald-400 to-teal-500'
+    const currentColor = selectedTemplate?.color || 'emerald'
+    
+    // 渲染场景对应的图标
+    const renderIcon = () => {
+      if (!selectedTemplate) return null
+      
+      switch (selectedTemplate.id) {
+        case 'writing':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="18" r="12" fill="white" opacity="0.2"/>
+              <rect x="18" y="18" width="12" height="18" fill="white" opacity="0.4"/>
+              <circle cx="24" cy="18" r="8" fill="none" stroke="white" strokeWidth="1" opacity="0.8"/>
+              <rect x="22" y="24" width="4" height="12" fill="white" opacity="0.9"/>
+            </svg>
+          )
+        case 'analysis':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <circle cx="16" cy="28" r="8" fill="white" opacity="0.3"/>
+              <circle cx="24" cy="20" r="10" fill="white" opacity="0.2"/>
+              <circle cx="32" cy="16" r="6" fill="white" opacity="0.5"/>
+              <path d="M16 28L24 20L32 16" stroke="white" strokeWidth="1" opacity="0.7"/>
+              <circle cx="32" cy="16" r="3" fill="white" opacity="0.9"/>
+            </svg>
+          )
+        case 'teaching':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <path d="M24 8 L36 28 L12 28 Z" fill="white" opacity="0.2"/>
+              <path d="M24 16 L32 28 L16 28 Z" fill="white" opacity="0.4"/>
+              <path d="M24 20 L28 28 L20 28 Z" fill="white" opacity="0.6"/>
+              <circle cx="24" cy="36" r="4" fill="white" opacity="0.8"/>
+            </svg>
+          )
+        case 'business':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <rect x="12" y="12" width="24" height="24" fill="white" opacity="0.2" transform="rotate(0 24 24)"/>
+              <rect x="14" y="14" width="20" height="20" fill="white" opacity="0.3" transform="rotate(30 24 24)"/>
+              <rect x="16" y="16" width="16" height="16" fill="white" opacity="0.4" transform="rotate(45 24 24)"/>
+              <circle cx="24" cy="24" r="6" fill="none" stroke="white" strokeWidth="1" opacity="0.8"/>
+            </svg>
+          )
+        case 'creative':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <path d="M24 8 L34.4 14 L34.4 26 L24 32 L13.6 26 L13.6 14 Z" fill="white" opacity="0.2"/>
+              <circle cx="24" cy="24" r="14" fill="none" stroke="white" strokeWidth="1" opacity="0.4"/>
+              <circle cx="24" cy="14" r="3" fill="white" opacity="0.7"/>
+              <circle cx="31" cy="20" r="3" fill="white" opacity="0.6"/>
+              <circle cx="31" cy="28" r="3" fill="white" opacity="0.5"/>
+              <circle cx="24" cy="34" r="3" fill="white" opacity="0.6"/>
+              <circle cx="17" cy="28" r="3" fill="white" opacity="0.5"/>
+              <circle cx="17" cy="20" r="3" fill="white" opacity="0.6"/>
+            </svg>
+          )
+        case 'custom':
+          return (
+            <svg className="w-12 h-12" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="16" fill="none" stroke="white" strokeWidth="1" strokeDasharray="3 3" opacity="0.4"/>
+              <path d="M24 16 L24 32 M16 24 L32 24" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
+              <circle cx="16" cy="16" r="1.5" fill="white" opacity="0.3"/>
+              <circle cx="32" cy="16" r="1.5" fill="white" opacity="0.3"/>
+              <circle cx="32" cy="32" r="1.5" fill="white" opacity="0.3"/>
+              <circle cx="16" cy="32" r="1.5" fill="white" opacity="0.3"/>
+            </svg>
+          )
+        default:
+          return <i className="fas fa-check text-white text-3xl"></i>
+      }
+    }
+    
+    return (
+      <div className="animate-fade-in">
+        <div className="mb-8 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 relative">
+            <div className={`absolute inset-0 bg-gradient-to-br ${currentGradient} rounded-3xl opacity-20`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${currentGradient} rounded-3xl flex items-center justify-center`}>
+              {renderIcon()}
+            </div>
+          </div>
+          <h2 className="text-3xl font-light text-white mb-4">提示词生成成功！</h2>
+          <p className="text-lg font-light text-gray-400">你的专属提示词已经准备就绪</p>
+        </div>
+
+        <div className="mb-8">
+          <div className={`relative p-6 rounded-2xl backdrop-blur-xl bg-white/[0.03] border border-white/10 hover:border-${currentColor}-500/30 transition-all duration-300`}>
+            <h3 className="text-sm font-light text-gray-400 mb-4">生成的提示词</h3>
+            <div className="text-white font-light leading-relaxed whitespace-pre-wrap">
+              {generatedPrompt}
+            </div>
+            {/* 添加装饰性光晕 */}
+            <div className={`absolute -inset-4 bg-gradient-to-r ${currentGradient} opacity-5 blur-3xl -z-10`} />
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(generatedPrompt)
+              // 可以添加复制成功的提示
+            }}
+            className="flex-1 py-4 rounded-xl bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition-all duration-300 font-light"
+          >
+            <i className="fas fa-copy mr-2"></i>
+            复制提示词
+          </button>
+          <button
+            onClick={() => onGenerate(generatedPrompt)}
+            className={`flex-1 py-4 rounded-xl bg-gradient-to-r ${currentGradient} text-white hover:shadow-lg hover:shadow-${currentColor}-500/25 transition-all duration-300 font-light`}
+          >
+            <i className="fas fa-wand-magic-sparkles mr-2"></i>
+            优化提示词
+          </button>
+        </div>
+        
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => {
+              setCurrentStep('select-scene')
+              setSelectedTemplate(null)
+              setAnswers({})
+              setGeneratedPrompt('')
+            }}
+            className="text-gray-400 hover:text-white transition-colors font-light"
+          >
+            <i className="fas fa-plus mr-2"></i>
+            生成新的提示词
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black">
@@ -536,6 +690,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
             {currentStep === 'select-scene' && renderSceneSelection()}
             {currentStep === 'answer-questions' && renderQuestions()}
             {currentStep === 'custom' && renderCustom()}
+            {currentStep === 'show-result' && renderResult()}
           </div>
         </div>
       </div>

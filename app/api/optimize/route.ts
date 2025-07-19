@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         // 解析响应
         const optimizationResult = {
           optimizedPrompt: extractOptimizedPrompt(text),
-          dimensions: extractDimensions(text)
+          dimensions: {} // 新模板不需要提取维度
         }
         
         console.log('=== Extraction Results ===')
@@ -333,22 +333,21 @@ function extractOptimizedPrompt(response: string): string {
   console.log('=== Extracting optimized prompt ===')
   console.log('Response first 500 chars:', response.substring(0, 500))
   
-  // 提取优化后的提示词 - 尝试多种格式
-  const patterns = [
-    /【优化后的提示词】\s*\n([\s\S]*?)(?=\n【六维度设定】|$)/,
-    /\*\*优化后的提示词\*\*\s*\n([\s\S]*?)(?=\n\*\*六维度设定\*\*|$)/,
-    /优化后的提示词[:：]\s*\n([\s\S]*?)(?=\n六维度|$)/i,
-    /## 优化后的提示词\s*\n([\s\S]*?)(?=\n## 六维度设定|$)/,
-  ]
+  // 由于新的优化模板直接输出优化后的提示词，不需要复杂的提取逻辑
+  // 直接返回整个响应内容
+  const cleaned = response.trim()
   
-  for (const pattern of patterns) {
-    const match = response.match(pattern)
-    if (match && match[1].trim()) {
-      console.log('Matched pattern:', pattern.source)
-      console.log('Extracted prompt length:', match[1].trim().length)
-      return match[1].trim()
+  // 移除可能的开头和结尾标记
+  const unwanted = ['优化后：', '优化后的提示词：', '优化结果：']
+  let result = cleaned
+  for (const prefix of unwanted) {
+    if (result.startsWith(prefix)) {
+      result = result.substring(prefix.length).trim()
     }
   }
+  
+  console.log('Extracted prompt length:', result.length)
+  return result
   
   // 如果都没匹配到，尝试提取第一个段落直到遇到六维度相关内容
   const sixDimPattern = /(?:【?六维度设定】?|\*\*六维度设定\*\*|## 六维度设定)/
