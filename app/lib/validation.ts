@@ -212,6 +212,7 @@ export interface OptimizeRequestBody {
     originalPrompt: string
     promptType: PromptType
     answers: Record<string, string>
+    useV2?: boolean
   }
 }
 

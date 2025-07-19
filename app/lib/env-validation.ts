@@ -33,7 +33,7 @@ function getEnvConfig(): EnvConfig {
   const config: EnvConfig = {
     API_PROVIDER: provider,
     NODE_ENV: (process.env.NODE_ENV || 'development') as EnvConfig['NODE_ENV'],
-    MODEL_NAME: process.env.MODEL_NAME || 'google/gemini-2.5-pro',
+    MODEL_NAME: process.env.MODEL_NAME || 'anthropic/claude-opus-4',
   }
   
   // Validate API provider
@@ -86,7 +86,7 @@ export function getApiProvider(): 'google' | 'openrouter' {
 }
 
 export function getModelName(): string {
-  return getEnv().MODEL_NAME || 'google/gemini-2.5-pro'
+  return getEnv().MODEL_NAME || 'anthropic/claude-opus-4'
 }
 
 export function isDevelopment(): boolean {

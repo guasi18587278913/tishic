@@ -8,7 +8,7 @@ interface ModelSelectorProps {
 }
 
 export default function ModelSelector({ onModelChange }: ModelSelectorProps) {
-  const [selectedModel, setSelectedModel] = useState('claude-3.7-sonnet')
+  const [selectedModel, setSelectedModel] = useState('claude-opus-4')
 
   const handleChange = (model: string) => {
     setSelectedModel(model)
@@ -33,8 +33,9 @@ export default function ModelSelector({ onModelChange }: ModelSelectorProps) {
               <div className="flex items-center justify-between">
                 <span className="font-medium">{config.name}</span>
                 <span className={`text-xs px-2 py-1 rounded ${
-                  config.speed === '非常快' ? 'bg-green-100 text-green-700' :
-                  config.speed === '中等' ? 'bg-yellow-100 text-yellow-700' :
+                  config.speed === '极快' || config.speed === '非常快' ? 'bg-green-100 text-green-700' :
+                  config.speed === '快速' ? 'bg-blue-100 text-blue-700' :
+                  config.speed === '中速' || config.speed === '中等' ? 'bg-yellow-100 text-yellow-700' :
                   'bg-red-100 text-red-700'
                 }`}>
                   {config.speed}

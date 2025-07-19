@@ -48,9 +48,6 @@ export class OpenRouterAPI {
             top_p: 0.9,
             presence_penalty: 0,
             frequency_penalty: 0,
-            // 尝试禁用 reasoning 输出
-            reasoning: false,
-            show_reasoning: false,
           }),
         })
 

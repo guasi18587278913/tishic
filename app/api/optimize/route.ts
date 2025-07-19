@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzePromptType, generateQuestions, buildOptimizationPrompt } from '@/app/lib/prompt-optimizer'
+import { 
+  identifyTaskType, 
+  buildOptimizedPrompt, 
+  generateInteractiveQuestions,
+  optimizePromptV2 
+} from '@/app/lib/prompt-optimizer-v2'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { OpenRouterAPI } from '@/app/lib/openrouter-api'
 import { enhancedCache } from '@/app/lib/enhanced-cache'
@@ -43,20 +49,81 @@ export async function POST(request: NextRequest) {
         // 验证请求
         const analyzeReq = validateAnalyzeRequest(body)
         
-        // 分析提示词类型并生成问题
+        // 使用新的智能识别系统
+        const taskAnalysis = identifyTaskType(analyzeReq.data.prompt)
+        const interactiveQuestions = generateInteractiveQuestions(taskAnalysis.type)
+        
+        // 为了兼容性，也返回旧的格式
         const promptType = analyzePromptType(analyzeReq.data.prompt)
         const questions = generateQuestions(promptType)
         
         return NextResponse.json({
           promptType,
-          questions
+          questions,
+          // 新增的智能分析结果
+          v2: {
+            taskType: taskAnalysis.type,
+            intent: taskAnalysis.intent,
+            confidence: taskAnalysis.confidence,
+            interactiveQuestions
+          }
         })
 
       case 'optimize':
         // 验证请求
         const optimizeReq = validateOptimizeRequest(body)
-        const { originalPrompt, promptType: type, answers } = optimizeReq.data
+        const { originalPrompt, promptType: type, answers, useV2 } = optimizeReq.data
         
+        // 使用 V2 版本的优化逻辑
+        if (useV2 !== false) {  // 默认使用 V2
+          try {
+            const v2Result = await optimizePromptV2(originalPrompt, {
+              interactiveMode: false,
+              userAnswers: answers
+            })
+            
+            // 检查缓存
+            const cacheKey = `v2_${originalPrompt}_${JSON.stringify(answers || {})}`
+            const cached = enhancedCache.get(cacheKey, {})
+            if (cached) {
+              console.log('使用缓存的V2优化结果')
+              return NextResponse.json(cached.result, {
+                headers: {
+                  'X-Cache': 'HIT',
+                  'X-Version': 'v2',
+                  'Cache-Control': 'private, max-age=3600'
+                }
+              })
+            }
+            
+            // 构建响应
+            const response = {
+              optimizedPrompt: v2Result.optimizedPrompt,
+              analysis: v2Result.analysis,
+              suggestions: v2Result.suggestions,
+              dimensions: {
+                taskType: v2Result.analysis.taskType,
+                intent: v2Result.analysis.intent,
+                confidence: v2Result.analysis.confidence
+              }
+            }
+            
+            // 存入缓存
+            enhancedCache.set(cacheKey, response)
+            
+            return NextResponse.json(response, {
+              headers: {
+                'X-Version': 'v2',
+                'Cache-Control': 'private, max-age=3600'
+              }
+            })
+          } catch (error) {
+            console.error('V2 optimization failed, falling back to V1:', error)
+            // 如果 V2 失败，继续使用 V1
+          }
+        }
+        
+        // V1 逻辑（作为后备）
         // 如果没有答案或答案为空，使用智能默认值
         let finalAnswers = answers
         if (!answers || Object.keys(answers).length === 0) {

@@ -1,6 +1,17 @@
 // 模型配置 - 使用 Gemini 2.5 Flash
 
 export const MODEL_CONFIGS = {
+  // Claude Opus 4 - Anthropic 最强模型 (通过 OpenRouter)
+  'claude-opus-4': {
+    id: 'anthropic/claude-opus-4',
+    name: 'Claude Opus 4',
+    description: 'Anthropic 最强模型，理解能力卓越，特别适合复杂提示词优化',
+    speed: '中速',
+    cost: '$15/$75 per M tokens',
+    qualityScore: 10,
+    speedScore: 7,
+    maxTokens: 32768,
+  },
   // Gemini 2.5 Flash - Google 快速模型 (通过 OpenRouter)
   'gemini-2.5-flash': {
     id: 'google/gemini-2.5-flash',
@@ -10,7 +21,7 @@ export const MODEL_CONFIGS = {
     cost: '$0.075/$0.3 per M tokens',
     qualityScore: 8,
     speedScore: 10,
-    maxTokens: 32768, // 支持超长输出
+    maxTokens: 32768,
   },
   // Gemini 2.5 Pro - Google 最新模型 (通过 OpenRouter)
   'gemini-2.5-pro': {
@@ -19,14 +30,14 @@ export const MODEL_CONFIGS = {
     description: 'Google 最新模型，中文理解能力强，性能优秀',
     speed: '快速',
     cost: '$3.5/$10.5 per M tokens',
-    qualityScore: 10,
+    qualityScore: 9,
     speedScore: 9,
-    maxTokens: 32768, // 支持超长输出
+    maxTokens: 32768,
   },
 }
 
-// 默认使用 Gemini 2.5 Flash
-export const DEFAULT_MODEL = MODEL_CONFIGS['gemini-2.5-flash'].id
+// 默认使用 Claude Opus 4 以获得最佳质量
+export const DEFAULT_MODEL = MODEL_CONFIGS['claude-opus-4'].id
 
 // 用户偏好的模型（从 localStorage 读取）
 export function getUserPreferredModel(): string {
