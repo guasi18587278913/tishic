@@ -357,7 +357,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
         }
       }
       
-      return colorMap[selectedTemplate.gradient] || colorMap['from-purple-400 to-pink-500']
+      return colorMap[selectedTemplate?.gradient || 'from-purple-400 to-pink-500'] || colorMap['from-purple-400 to-pink-500']
     }
 
     const theme = getThemeStyles()
@@ -458,6 +458,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
               </span>
             )}
           </button>
+        </div>
         </div>
       </div>
     )
