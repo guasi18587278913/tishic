@@ -83,8 +83,7 @@ export async function POST(request: NextRequest) {
             })
             
             // 检查缓存
-            const cacheKey = `v2_${originalPrompt}_${JSON.stringify(answers || {})}`
-            const cached = enhancedCache.get(cacheKey, {})
+            const cached = enhancedCache.get(originalPrompt, answers || {})
             if (cached) {
               console.log('使用缓存的V2优化结果')
               return NextResponse.json(cached.result, {
@@ -109,7 +108,7 @@ export async function POST(request: NextRequest) {
             }
             
             // 存入缓存
-            enhancedCache.set(cacheKey, response)
+            enhancedCache.set(originalPrompt, v2Result.analysis.taskType, answers || {}, response)
             
             return NextResponse.json(response, {
               headers: {
