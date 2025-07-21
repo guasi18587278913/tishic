@@ -155,6 +155,7 @@ export function identifyTaskType(input: string): {
   
   return {
     type: identifiedType,
+    taskType: identifiedType,  // 为了兼容性，同时提供两个属性
     intent,
     confidence
   }
