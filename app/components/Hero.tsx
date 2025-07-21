@@ -7,22 +7,22 @@ export default function Hero() {
   const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       {/* 微妙的背景光晕 */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-teal-500/5 rounded-full filter blur-[160px]" />
-        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-emerald-500/5 rounded-full filter blur-[160px]" />
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-teal-500/3 rounded-full filter blur-[160px]" />
+        <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-emerald-500/3 rounded-full filter blur-[160px]" />
       </div>
 
       {/* 主内容 */}
       <div className="relative z-10 text-center px-4 animate-fade-in">
         {/* 标题 */}
-        <h1 className="text-6xl md:text-7xl font-extralight text-white mb-6 tracking-tight">
+        <h1 className="text-6xl md:text-7xl font-light text-white mb-6 tracking-tight">
           提示词优化助手
         </h1>
         
         {/* 副标题 */}
-        <p className="text-xl md:text-2xl font-light text-gray-400 mb-20 tracking-wide">
+        <p className="text-xl md:text-2xl font-normal text-gray-300 mb-20 tracking-wide">
           The Most Powerful AI Prompt Optimizer
         </p>
 
@@ -40,7 +40,7 @@ export default function Hero() {
             {/* 按钮容器 */}
             <div className="relative flex flex-col items-center">
               {/* 毛玻璃背景 */}
-              <div className="relative w-32 h-32 rounded-3xl backdrop-blur-xl bg-white/5 border border-white/10 group-hover:border-white/20 transition-all duration-300 group-hover:scale-105">
+              <div className="relative w-32 h-32 rounded-3xl backdrop-blur-xl bg-gray-800/50 border border-gray-700 group-hover:border-teal-500/50 transition-all duration-300 group-hover:scale-105">
                 {/* 渐变背景 */}
                 <div className="absolute inset-4 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl flex items-center justify-center">
                   {/* 极简几何箭头 - 前进的诗意 */}
@@ -60,7 +60,7 @@ export default function Hero() {
               </div>
               
               {/* 文字标签 */}
-              <p className="mt-6 text-lg font-light text-gray-400 text-center">
+              <p className="mt-6 text-lg font-normal text-gray-200 text-center">
                 将你模糊的想法变具体
               </p>
             </div>

@@ -1,0 +1,25 @@
+
+> prompt-optimizer@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.3.5
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.10.206:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2s
+ ○ Compiling / ...
+ ✓ Compiled / in 1282ms (756 modules)
+ GET / 200 in 1849ms
+ ✓ Compiled /api/optimize/v2 in 875ms (767 modules)
+ POST /api/optimize/v2 400 in 591ms
+ POST /api/optimize/v2 400 in 3ms
+ POST /api/optimize/v2 400 in 2ms
+ POST /api/optimize/v2 400 in 2ms
+ GET / 200 in 87ms
+ POST /api/optimize/v2 200 in 19756ms
+ POST /api/optimize/v2 200 in 21049ms
+ POST /api/optimize/v2 200 in 16835ms
+ POST /api/optimize/v2 200 in 2685ms
+[?25h

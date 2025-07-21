@@ -57,9 +57,9 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
     <div className="fixed inset-0 bg-black">
       {/* 背景渐变 */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full filter blur-[128px]" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full filter blur-[128px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/5 rounded-full filter blur-[128px]" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full filter blur-[128px]" />
       </div>
 
       {/* 主内容 */}
@@ -67,10 +67,10 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
         <div className="max-w-6xl w-full">
           {/* 标题 */}
           <div className="text-center mb-16 animate-fade-in">
-            <h1 className="text-5xl font-extralight text-white mb-4 tracking-wide">
+            <h1 className="text-5xl font-light text-white mb-4 tracking-wide">
               选择你的创作方式
             </h1>
-            <p className="text-lg text-gray-400 font-light">
+            <p className="text-lg text-gray-300 font-normal">
               按数字键 1/2 或使用方向键快速选择
             </p>
           </div>
@@ -87,10 +87,10 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
               style={{ transition: 'transform 0.1s ease-out' }}
             >
               {/* 光晕效果 */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
               
               {/* 卡片主体 */}
-              <div className="relative h-80 p-8 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 group-hover:border-white/20 transition-all duration-300">
+              <div className="relative h-80 p-8 rounded-2xl backdrop-blur-xl bg-gray-800/50 border border-gray-700 group-hover:border-emerald-500/50 group-hover:bg-gray-800/70 transition-all duration-300">
                 {/* 内容 */}
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <div className="mb-6">
@@ -115,10 +115,10 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
                         </svg>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-light text-white mb-3">
+                    <h3 className="text-2xl font-normal text-white mb-3">
                       生成新提示词
                     </h3>
-                    <p className="text-gray-400 font-light leading-relaxed">
+                    <p className="text-gray-300 font-normal leading-relaxed">
                       通过引导式问答<br />从零开始创建专业提示词
                     </p>
                   </div>
@@ -143,10 +143,10 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
               style={{ transition: 'transform 0.1s ease-out' }}
             >
               {/* 光晕效果 */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
               
               {/* 卡片主体 */}
-              <div className="relative h-80 p-8 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 group-hover:border-white/20 transition-all duration-300">
+              <div className="relative h-80 p-8 rounded-2xl backdrop-blur-xl bg-gray-800/50 border border-gray-700 group-hover:border-purple-500/50 group-hover:bg-gray-800/70 transition-all duration-300">
                 {/* 内容 */}
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <div className="mb-6">
@@ -171,10 +171,10 @@ export default function UnifiedEntry({ onModeSelect }: UnifiedEntryProps) {
                         </svg>
                       </div>
                     </div>
-                    <h3 className="text-2xl font-light text-white mb-3">
+                    <h3 className="text-2xl font-normal text-white mb-3">
                       优化现有提示词
                     </h3>
-                    <p className="text-gray-400 font-light leading-relaxed">
+                    <p className="text-gray-300 font-normal leading-relaxed">
                       智能分析并改进<br />让你的提示词更加精准
                     </p>
                   </div>

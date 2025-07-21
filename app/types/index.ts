@@ -1,4 +1,6 @@
 export type PromptType = 'creative' | 'analytical' | 'task' | 'generative'
+export type TaskType = 'tool' | 'creative' | 'analytical' | 'generative' | 'general'
+export type OptimizationMode = 'instant' | 'smart' | 'deep'
 
 export interface OptimizationState {
   originalPrompt: string
@@ -15,6 +17,27 @@ export interface OptimizationState {
     retryable?: boolean
   }
   retryCount?: number
+}
+
+export interface OptimizationResult {
+  original: string
+  optimized: string
+  taskType: TaskType | string
+  analysis?: {
+    taskType: TaskType
+    confidence: number
+    intent?: string
+  }
+  timestamp: string
+}
+
+export interface SmartSuggestions {
+  avoidances: string[]
+  style: string
+  focus: string
+  context?: string
+  constraints?: string[]
+  criteria?: string[]
 }
 
 export interface Question {

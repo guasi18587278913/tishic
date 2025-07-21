@@ -3,15 +3,7 @@
  * 基于任务类型的智能优化系统
  */
 
-import { PromptType } from '../types'
-
-// 扩展任务类型定义
-export type TaskType = 
-  | 'tool'        // 工具类：整理、处理、转换、格式化
-  | 'creative'    // 创作类：写作、故事、文案、创意
-  | 'analytical'  // 分析类：研究、评估、解释、比较
-  | 'generative'  // 生成类：代码、方案、设计、列表
-  | 'unknown'     // 未知类型
+import { PromptType, TaskType } from '../types'
 
 // 任务意图
 export type TaskIntent = 
@@ -86,7 +78,7 @@ export function identifyTaskType(input: string): {
     creative: 0,
     analytical: 0,
     generative: 0,
-    unknown: 0
+    general: 0
   }
   
   // 工具类关键词
@@ -140,10 +132,10 @@ export function identifyTaskType(input: string): {
   
   // 找出最高分的类型
   let maxScore = 0
-  let identifiedType: TaskType = 'unknown'
+  let identifiedType: TaskType = 'general'
   
   Object.entries(typeScores).forEach(([type, score]) => {
-    if (score > maxScore && type !== 'unknown') {
+    if (score > maxScore && type !== 'general') {
       maxScore = score
       identifiedType = type as TaskType
     }
@@ -155,7 +147,6 @@ export function identifyTaskType(input: string): {
   
   return {
     type: identifiedType,
-    taskType: identifiedType,  // 为了兼容性，同时提供两个属性
     intent,
     confidence
   }
@@ -454,14 +445,14 @@ export function generateOptimizationExample(type: TaskType): {
       explanation: '详细定义了技术栈、功能规格、安全要求和交付标准，确保生成高质量代码'
     },
     
-    unknown: {
+    general: {
       original: '帮我做个东西',
       optimized: '请具体说明您需要什么帮助，例如：\n- 创作类：写文章、故事、文案\n- 工具类：整理信息、数据处理\n- 分析类：研究问题、对比方案\n- 生成类：编写代码、设计方案',
       explanation: '引导用户提供更具体的需求'
     }
   }
   
-  return examples[type] || examples.unknown
+  return examples[type] || examples.general
 }
 
 /**
@@ -536,7 +527,7 @@ function generateTaskDescription(prompt: string, type: TaskType): string {
     creative: '创作符合特定要求的原创内容',
     analytical: '深入分析问题并得出有见地的结论',
     generative: '生成高质量、可维护的解决方案',
-    unknown: '完成特定任务'
+    general: '完成特定任务'
   }
   
   return taskDescriptions[type]
@@ -645,10 +636,10 @@ function generateOptimizedVersion(
     
     generative: (prompt) => `请生成以下解决方案：\n需求：${prompt}\n[技术规范和质量要求]`,
     
-    unknown: (prompt) => `请具体说明您的需求：${prompt}`
+    general: (prompt) => `请具体说明您的需求：${prompt}`
   }
   
-  const generator = templates[type] || templates.unknown
+  const generator = templates[type] || templates.general
   return generator(originalPrompt)
 }
 
@@ -685,7 +676,10 @@ export async function optimizePromptV2(
   
   return {
     optimizedPrompt,
-    analysis,
+    analysis: {
+      ...analysis,
+      taskType: analysis.type  // Add taskType for backward compatibility
+    },
     suggestions
   }
 }
@@ -807,7 +801,7 @@ export function generateInteractiveQuestions(
         placeholder: '例如：性能要求、兼容性、安全标准'
       }
     ],
-    unknown: [
+    general: [
       {
         id: 'clarification',
         question: '能详细说明您的需求吗？',
@@ -816,5 +810,5 @@ export function generateInteractiveQuestions(
     ]
   }
   
-  return questionSets[taskType] || questionSets.unknown
+  return questionSets[taskType] || questionSets.general
 }

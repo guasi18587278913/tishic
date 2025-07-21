@@ -4,7 +4,8 @@ import { useState } from 'react'
 import UnifiedEntry from '../components/UnifiedEntry'
 import PromptGenerator from '../components/PromptGenerator'
 import OptimizationFlow from '../components/OptimizationFlow'
-import { AppMode, OptimizationState } from '../types'
+import SmartPromptOptimizer from '../components/SmartPromptOptimizer'
+import { AppMode, OptimizationState, OptimizationResult } from '../types/index'
 
 export default function AppPage() {
   const [mode, setMode] = useState<AppMode>('unified')
@@ -75,12 +76,12 @@ export default function AppPage() {
     
     case 'optimize':
       return (
-        <div className="min-h-screen relative overflow-hidden bg-black">
-          {/* 背景光晕 - 呼应入口按钮的紫蓝色调 */}
+        <div className="min-h-screen relative overflow-hidden bg-gray-900 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-900">
+          {/* 背景光晕 - 更加微妙 */}
           <div className="fixed inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-purple-500/[0.08] rounded-full filter blur-[200px]" />
-            <div className="absolute bottom-1/4 right-1/3 w-[600px] h-[600px] bg-blue-500/[0.08] rounded-full filter blur-[200px]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-600/[0.05] to-blue-600/[0.05] rounded-full filter blur-[250px]" />
+            <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-purple-500/[0.04] rounded-full filter blur-[200px]" />
+            <div className="absolute bottom-1/4 right-1/3 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full filter blur-[200px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-purple-600/[0.03] to-blue-600/[0.03] rounded-full filter blur-[250px]" />
           </div>
 
           <div className="relative z-10 min-h-screen">
@@ -89,24 +90,31 @@ export default function AppPage() {
               <div className="max-w-6xl mx-auto flex items-center justify-between">
                 <button
                   onClick={handleBack}
-                  className="text-gray-400 hover:text-white transition-colors font-light"
+                  className="text-gray-400 hover:text-white transition-colors font-light flex items-center gap-2"
                 >
-                  <i className="fas fa-arrow-left mr-2"></i>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                  </svg>
                   返回
                 </button>
                 <div className="flex items-center gap-2 text-sm font-light text-gray-400">
-                  <i className="fas fa-wand-magic-sparkles text-gray-400"></i>
-                  <span>提示词优化器</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                          d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>智能提示词优化器</span>
                 </div>
               </div>
             </div>
 
-            <OptimizationFlow
-              optimizationState={optimizationState}
-              setOptimizationState={setOptimizationState}
-              enableStreaming={enableStreaming}
-              setEnableStreaming={setEnableStreaming}
-            />
+            {/* Smart Prompt Optimizer */}
+            <main className="relative z-10 container mx-auto px-4 pt-24 pb-8 max-w-4xl">
+              <SmartPromptOptimizer 
+                onOptimizationComplete={(result: OptimizationResult) => {
+                  console.log('Optimization completed:', result)
+                }}
+              />
+            </main>
           </div>
         </div>
       )

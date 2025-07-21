@@ -175,8 +175,7 @@ export function buildOptimizationPrompt(
     'creative': '创作类',
     'analytical': '分析类', 
     'task': '任务类/工具类',
-    'generative': '生成类',
-    'general': '通用类'
+    'generative': '生成类'
   }
   
   return `${OPTIMIZATION_PROMPT}

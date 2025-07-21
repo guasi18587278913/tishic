@@ -3,6 +3,8 @@
  * 增强版 - 更准确理解"提示词"的本质
  */
 
+import { SmartSuggestions } from '../types'
+
 export const ENHANCED_OPTIMIZATION_PROMPT = `你是一个专业的提示词工程师。
 
 ## 核心理解
@@ -135,6 +137,38 @@ export function evaluatePromptQuality(prompt: string): {
   }
 
   return { score: Math.max(0, score), issues, suggestions }
+}
+
+/**
+ * 基于智能建议创建优化提示词
+ */
+export function createOptimizationPromptWithSuggestions(
+  userInput: string, 
+  suggestions: SmartSuggestions,
+  taskType?: string
+): string {
+  return `你是一个专业的提示词工程师。
+
+## 用户需求
+${userInput}
+
+## 优化建议（用户已确认）
+- 需要避免：${suggestions.avoidances.join('、')}
+- 推荐风格：${suggestions.style}
+- 核心聚焦：${suggestions.focus}
+${suggestions.context ? `- 使用场景：${suggestions.context}` : ''}
+
+## 任务
+基于以上用户需求和优化建议，生成一个优化后的提示词。
+
+要求：
+1. 充分考虑用户确认的优化建议
+2. 避免建议中提到的问题
+3. 采用推荐的风格
+4. 聚焦在核心目标上
+5. 生成的提示词要清晰、具体、可直接使用
+
+请直接输出优化后的提示词，不需要解释。`
 }
 
 /**
