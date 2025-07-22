@@ -3,15 +3,15 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import OptimizationHeader from '../components/OptimizationHeader'
-import SmartPromptOptimizer from '../components/SmartPromptOptimizer'
-import { OptimizationResult } from '../types/index'
+import ClarityOptimizer from '../components/ClarityOptimizer'
+import { ClarityOptimizationResult } from '../lib/clarity-optimizer'
 
 export default function OptimizerV2Page() {
   const router = useRouter()
 
-  const handleOptimizationComplete = (result: OptimizationResult) => {
+  const handleOptimizationComplete = (result: ClarityOptimizationResult) => {
     // Handle completion if needed
-    console.log('Optimization completed:', result)
+    console.log('CLARITY optimization completed:', result)
   }
 
   return (
@@ -26,8 +26,8 @@ export default function OptimizerV2Page() {
       <OptimizationHeader />
 
       {/* Main Content - Single column layout */}
-      <main className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-        <SmartPromptOptimizer 
+      <main className="relative z-10 container mx-auto px-4 py-8">
+        <ClarityOptimizer 
           onOptimizationComplete={handleOptimizationComplete}
         />
       </main>

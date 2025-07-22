@@ -4,8 +4,9 @@ import { useState } from 'react'
 import UnifiedEntry from '../components/UnifiedEntry'
 import PromptGenerator from '../components/PromptGenerator'
 import OptimizationFlow from '../components/OptimizationFlow'
-import SmartPromptOptimizer from '../components/SmartPromptOptimizer'
-import { AppMode, OptimizationState, OptimizationResult } from '../types/index'
+import ClarityOptimizer from '../components/ClarityOptimizer'
+import { AppMode, OptimizationState } from '../types/index'
+import { ClarityOptimizationResult } from '../lib/clarity-optimizer'
 
 export default function AppPage() {
   const [mode, setMode] = useState<AppMode>('unified')
@@ -107,11 +108,11 @@ export default function AppPage() {
               </div>
             </div>
 
-            {/* Smart Prompt Optimizer */}
-            <main className="relative z-10 container mx-auto px-4 pt-24 pb-8 max-w-4xl">
-              <SmartPromptOptimizer 
-                onOptimizationComplete={(result: OptimizationResult) => {
-                  console.log('Optimization completed:', result)
+            {/* CLARITY Optimizer */}
+            <main className="relative z-10 container mx-auto px-4 pt-24 pb-8">
+              <ClarityOptimizer 
+                onOptimizationComplete={(result: ClarityOptimizationResult) => {
+                  console.log('CLARITY optimization completed:', result)
                 }}
               />
             </main>

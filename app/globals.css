@@ -183,6 +183,10 @@
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
   }
+  
+  .animate-fade-up {
+    animation: fade-up 0.5s ease-out forwards;
+  }
 
   /* Aurora neon effects */
   .neon-teal {
@@ -300,6 +304,17 @@
   }
   to {
     transform: translateX(200%);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

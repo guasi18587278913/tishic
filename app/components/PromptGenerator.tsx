@@ -148,8 +148,8 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
   const renderSceneSelection = () => (
     <div className="animate-fade-in">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-extralight text-white mb-3">选择场景</h2>
-        <p className="text-lg font-light text-gray-400">选择最符合你需求的场景，我们将引导你创建完美的提示词</p>
+        <h2 className="text-4xl font-light text-white mb-3">选择场景</h2>
+        <p className="text-xl font-normal text-gray-300">选择最符合你需求的场景，我们将引导你创建完美的提示词</p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -164,7 +164,7 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
             <div className={`absolute -inset-2 bg-gradient-to-r ${template.gradient} rounded-3xl opacity-0 group-hover:opacity-30 blur-2xl transition-all duration-700`} />
             
             {/* 卡片主体 */}
-            <div className="relative h-56 p-6 rounded-2xl backdrop-blur-xl bg-white/[0.03] border border-white/10 group-hover:border-white/20 transition-all duration-500 group-hover:bg-white/[0.06]">
+            <div className="relative h-56 p-6 rounded-2xl backdrop-blur-xl bg-white/[0.05] border border-white/15 group-hover:border-white/25 transition-all duration-500 group-hover:bg-white/[0.08]">
               <div className="h-full flex flex-col items-center text-center">
                 {/* 图标容器 */}
                 <div className="mb-4">
@@ -244,8 +244,8 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
                 </div>
                 
                 {/* 文字内容 */}
-                <h3 className="text-lg font-light text-white mb-1 group-hover:text-white/90 transition-colors">{template.name}</h3>
-                <p className="text-sm font-light text-gray-400 group-hover:text-gray-300 transition-colors">{template.description}</p>
+                <h3 className="text-xl font-normal text-white mb-2 group-hover:text-white/90 transition-colors">{template.name}</h3>
+                <p className="text-base font-normal text-gray-300 group-hover:text-gray-200 transition-colors">{template.description}</p>
               </div>
             </div>
           </button>
@@ -284,8 +284,8 @@ export default function PromptGenerator({ initialInput, onGenerate, onBack }: Pr
               </div>
               
               {/* 文字内容 */}
-              <h3 className="text-lg font-light text-gray-400 mb-1 group-hover:text-gray-300 transition-colors">自定义提示词</h3>
-              <p className="text-sm font-light text-gray-500 group-hover:text-gray-400 transition-colors">直接编写你的提示词</p>
+              <h3 className="text-xl font-normal text-gray-300 mb-2 group-hover:text-gray-200 transition-colors">自定义提示词</h3>
+              <p className="text-base font-normal text-gray-400 group-hover:text-gray-300 transition-colors">直接编写你的提示词</p>
             </div>
           </div>
         </button>
