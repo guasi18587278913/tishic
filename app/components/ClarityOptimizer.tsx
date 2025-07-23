@@ -19,6 +19,7 @@ export default function ClarityOptimizer({ onOptimizationComplete }: ClarityOpti
   const [selectedVersion, setSelectedVersion] = useState<OptimizedVersion | null>(null)
   const [showComparison, setShowComparison] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [showPrinciples, setShowPrinciples] = useState(false)
   
   // 示例提示词
   const examples = [
@@ -100,7 +101,7 @@ export default function ClarityOptimizer({ onOptimizationComplete }: ClarityOpti
       {/* 标题和说明 */}
       <div className="mb-6">
         <h2 className="text-2xl font-light text-white mb-2">输入您的提示词</h2>
-        <p className="text-gray-400">我们将通过CLARITY框架，帮您优化成更专业、更有效的版本</p>
+        <p className="text-gray-400">我们将基于AI深度分析，帮您生成更精准、更易用的版本</p>
       </div>
       
       {/* 输入框 */}
@@ -135,36 +136,18 @@ export default function ClarityOptimizer({ onOptimizationComplete }: ClarityOpti
           {!inputAnalysis.hasContext && (
             <div className="flex items-center gap-2 text-sm text-yellow-400">
               <span>💡</span>
-              <span>建议添加使用场景或目的，让AI更好地理解您的需求</span>
+              <span>添加使用场景，让结果更精准</span>
             </div>
           )}
           {!inputAnalysis.hasSpecifics && inputAnalysis.length > 10 && (
             <div className="flex items-center gap-2 text-sm text-yellow-400">
               <span>💡</span>
-              <span>建议添加具体要求，如格式、风格或字数限制</span>
+              <span>明确要求（如格式、风格），效果更佳</span>
             </div>
           )}
         </div>
       )}
       
-      {/* 示例提示词 */}
-      <div className="mb-6">
-        <p className="text-sm text-gray-400 mb-3">快速示例：</p>
-        <div className="flex flex-wrap gap-2">
-          {examples.map((example, index) => (
-            <button
-              key={index}
-              onClick={() => handleExampleClick(example.text)}
-              className="px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700 
-                       text-gray-300 text-sm hover:bg-gray-800 hover:border-gray-600 
-                       hover:text-white transition-all duration-200 flex items-center gap-2"
-            >
-              <span>{example.icon}</span>
-              <span>{example.text}</span>
-            </button>
-          ))}
-        </div>
-      </div>
       
       {/* 优化按钮 */}
       <button
@@ -199,247 +182,176 @@ export default function ClarityOptimizer({ onOptimizationComplete }: ClarityOpti
     
     return (
       <div className="space-y-6 animate-fade-in">
-        {/* 优化评分卡片 */}
+        {/* 优化结果对比 - 核心展示 */}
         <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6">
-          <h3 className="text-xl font-light text-white mb-4">优化分析</h3>
-          
-          {/* 评分指标 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {[
-              { label: '清晰度', value: result.score.clarity, color: 'purple' },
-              { label: '完整度', value: result.score.completeness, color: 'blue' },
-              { label: '可执行性', value: result.score.executability, color: 'green' },
-              { label: '预期效果', value: result.score.effectiveness, color: 'yellow' }
-            ].map((metric, index) => (
-              <div key={index} className="text-center">
-                <div className="relative w-20 h-20 mx-auto mb-2">
-                  <svg className="w-20 h-20 transform -rotate-90">
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="36"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-gray-700"
-                    />
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="36"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${2 * Math.PI * 36}`}
-                      strokeDashoffset={`${2 * Math.PI * 36 * (1 - metric.value / 100)}`}
-                      className={`text-${metric.color}-500 transition-all duration-1000`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-light text-white">{metric.value}</span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400">{metric.label}</p>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-light text-white">优化完成！</h2>
+            <div className="flex items-center gap-2 text-sm text-green-400">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>提升了 {Math.round((result.score.overall / 50 - 1) * 100)}%</span>
+            </div>
           </div>
           
-          {/* 总分 */}
-          <div className="text-center py-4 border-t border-gray-800">
-            <p className="text-gray-400 mb-1">综合评分</p>
-            <p className="text-3xl font-light text-white">{result.score.overall}/100</p>
+          {/* 原始 vs 优化对比 */}
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 mb-3">原始提示词</h3>
+              <div className="p-4 rounded-lg bg-gray-900/50 border border-gray-800">
+                <p className="text-gray-300 whitespace-pre-wrap">{input}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 mb-3">优化后（推荐版本）</h3>
+              <div className="relative p-4 rounded-lg bg-purple-900/20 border border-purple-500/50">
+                <p className="text-gray-100 whitespace-pre-wrap">
+                  {result.versions[0]?.prompt || '正在生成...'}
+                </p>
+                <button
+                  onClick={() => handleCopy(result.versions[0])}
+                  className="absolute top-2 right-2 px-3 py-1 rounded-lg bg-purple-800/50 
+                           hover:bg-purple-700/50 text-white text-sm transition-all duration-200"
+                >
+                  {copiedId === result.versions[0]?.id ? '已复制' : '复制'}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* 关键改进点 */}
+          <div className="border-t border-gray-800 pt-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">主要改进</h3>
+            <div className="flex flex-wrap gap-2">
+              {result.versions[0]?.highlights.slice(0, 3).map((highlight, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 rounded-full bg-green-900/30 border border-green-700/50 
+                           text-sm text-green-300"
+                >
+                  ✓ {highlight}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         
-        {/* 优化洞察 */}
-        {result.insights.length > 0 && (
+        {/* 更多版本选择 - 简化展示 */}
+        {result.versions.length > 1 && (
           <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6">
-            <h3 className="text-xl font-light text-white mb-4">优化建议</h3>
-            <div className="space-y-3">
-              {result.insights.map((insight, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 animate-slide-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                    insight.priority === 'high' ? 'bg-red-500' :
-                    insight.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                  }`} />
-                  <div className="flex-1">
-                    <p className="text-gray-300 mb-1">{insight.issue}</p>
-                    <p className="text-sm text-gray-500">💡 {insight.suggestion}</p>
-                    {insight.example && (
-                      <p className="text-sm text-gray-600 mt-1 italic">{insight.example}</p>
-                    )}
+            <h3 className="text-lg font-light text-white mb-4">其他优化版本</h3>
+            <div className="space-y-4">
+              {result.versions.slice(1).map((version) => (
+                <div key={version.id} className="border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h4 className="font-medium text-white">{version.title}</h4>
+                      <p className="text-sm text-gray-400 mt-1">{version.description}</p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(version)}
+                      className="px-3 py-1 rounded-lg bg-gray-800 hover:bg-gray-700 
+                               text-gray-400 hover:text-white text-sm transition-all duration-200"
+                    >
+                      {copiedId === version.id ? '已复制' : '复制'}
+                    </button>
                   </div>
+                  <details className="mt-3">
+                    <summary className="text-sm text-purple-400 hover:text-purple-300 cursor-pointer">
+                      查看完整内容
+                    </summary>
+                    <div className="mt-2 p-3 rounded-lg bg-gray-900/50 border border-gray-800">
+                      <pre className="text-sm text-gray-300 whitespace-pre-wrap">{version.prompt}</pre>
+                    </div>
+                  </details>
                 </div>
               ))}
             </div>
           </div>
         )}
         
-        {/* 优化版本选择 */}
-        <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6">
-          <h3 className="text-xl font-light text-white mb-4">优化版本</h3>
-          
-          {/* 版本选择器 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {result.versions.map((version) => (
-              <button
-                key={version.id}
-                onClick={() => setSelectedVersion(version)}
-                className={`p-4 rounded-xl border transition-all duration-300 ${
-                  selectedVersion?.id === version.id
-                    ? 'bg-purple-900/30 border-purple-500 shadow-lg shadow-purple-500/20'
-                    : 'bg-gray-900/30 border-gray-700 hover:bg-gray-900/50 hover:border-gray-600'
-                }`}
-              >
-                <h4 className="text-lg font-medium text-white mb-2">{version.title}</h4>
-                <p className="text-sm text-gray-400 mb-3">{version.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">评分</span>
-                  <span className="text-lg font-light text-purple-400">{version.score.overall}</span>
+        {/* 详细分析 - 折叠展示 */}
+        <details className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl">
+          <summary className="p-6 cursor-pointer hover:bg-white/[0.02] transition-colors">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-light text-white">查看详细分析</h3>
+              <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </summary>
+          <div className="px-6 pb-6 space-y-6">
+            {/* 评分概览 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-400 mb-3">评分概览</h4>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-light text-white">{result.score.overall}</p>
+                  <p className="text-xs text-gray-500">综合评分</p>
                 </div>
-              </button>
-            ))}
-          </div>
-          
-          {/* 选中版本详情 */}
-          {selectedVersion && (
-            <div
-              key={selectedVersion.id}
-              className="space-y-4 animate-fade-in"
-            >
-              {/* 优化亮点 */}
-              <div>
-                <h5 className="text-sm font-medium text-gray-400 mb-2">优化亮点</h5>
-                <div className="flex flex-wrap gap-2">
-                  {selectedVersion.highlights.map((highlight, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 rounded-full bg-purple-900/30 border border-purple-700/50 
-                               text-sm text-purple-300"
-                    >
-                      {highlight}
-                    </span>
+                <div className="flex-1 grid grid-cols-4 gap-2">
+                  {[
+                    { label: '清晰度', value: result.score.clarity },
+                    { label: '完整度', value: result.score.completeness },
+                    { label: '可执行性', value: result.score.executability },
+                    { label: '预期效果', value: result.score.effectiveness }
+                  ].map((metric, index) => (
+                    <div key={index} className="text-center">
+                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-1">
+                        <div 
+                          className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-1000"
+                          style={{ width: `${metric.value}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">{metric.label}</p>
+                    </div>
                   ))}
                 </div>
               </div>
-              
-              {/* 优化理由 */}
+            </div>
+            
+            {/* 优化建议 */}
+            {result.insights.length > 0 && (
               <div>
-                <h5 className="text-sm font-medium text-gray-400 mb-2">优化理由</h5>
-                <p className="text-gray-300">{selectedVersion.reasoning}</p>
-              </div>
-              
-              {/* 优化后的提示词 */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="text-sm font-medium text-gray-400">优化后的提示词</h5>
-                  <button
-                    onClick={() => setShowComparison(!showComparison)}
-                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    {showComparison ? '隐藏对比' : '显示对比'}
-                  </button>
-                </div>
-                
-                {showComparison && (
-                  <div className="mb-4 p-4 rounded-lg bg-gray-900/50 border border-gray-800">
-                    <p className="text-sm text-gray-500 mb-2">原始提示词：</p>
-                    <p className="text-gray-300 whitespace-pre-wrap">{input}</p>
-                  </div>
-                )}
-                
-                <div className="relative">
-                  <pre className="p-4 rounded-lg bg-gray-900/50 border border-gray-800 
-                                text-gray-300 whitespace-pre-wrap overflow-x-auto">
-                    {selectedVersion.prompt}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(selectedVersion)}
-                    className="absolute top-2 right-2 px-3 py-1 rounded-lg bg-gray-800 
-                             hover:bg-gray-700 text-gray-400 hover:text-white text-sm 
-                             transition-all duration-200"
-                  >
-                    {copiedId === selectedVersion.id ? '已复制' : '复制'}
-                  </button>
+                <h4 className="text-sm font-medium text-gray-400 mb-3">优化要点</h4>
+                <div className="space-y-2">
+                  {result.insights.slice(0, 3).map((insight, index) => (
+                    <div key={index} className="flex items-start gap-2 text-sm">
+                      <span className="text-purple-400 mt-0.5">•</span>
+                      <p className="text-gray-300">{insight.suggestion}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-        
-        {/* 最佳实践 */}
-        {result.bestPractices.length > 0 && (
-          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6">
-            <h3 className="text-xl font-light text-white mb-4">最佳实践建议</h3>
-            <div className="space-y-2">
-              {result.bestPractices.map((practice, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-2 text-gray-300 animate-slide-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <span className="flex-shrink-0">{practice.startsWith('✅') ? '' : '•'}</span>
-                  <span>{practice}</span>
-                </div>
-              ))}
+            )}
+            
+            {/* CLARITY框架说明 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-400 mb-3">优化原理</h4>
+              <p className="text-sm text-gray-500 mb-3">基于CLARITY七维框架进行全面分析</p>
+              <div className="grid grid-cols-7 gap-2">
+                {[
+                  { letter: 'C', desc: '情境化' },
+                  { letter: 'L', desc: '层次化' },
+                  { letter: 'A', desc: '增强化' },
+                  { letter: 'R', desc: '精炼化' },
+                  { letter: 'I', desc: '迭代化' },
+                  { letter: 'T', desc: '定制化' },
+                  { letter: 'Y', desc: '产出化' }
+                ].map((item, index) => (
+                  <div key={index} className="text-center">
+                    <div className="w-8 h-8 mx-auto mb-1 rounded bg-purple-900/30 border border-purple-700/50 
+                                  flex items-center justify-center">
+                      <span className="text-xs font-bold text-purple-400">{item.letter}</span>
+                    </div>
+                    <p className="text-xs text-gray-500">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        )}
-        
-        {/* 相似优秀示例 */}
-        {result.similarExamples && result.similarExamples.length > 0 && (
-          <div className="backdrop-blur-xl bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6">
-            <h3 className="text-xl font-light text-white mb-4">相似的优秀示例</h3>
-            <div className="space-y-4">
-              {result.similarExamples.map((example, index) => (
-                <div
-                  key={example.id}
-                  className="p-4 rounded-xl bg-gray-900/50 border border-gray-800 hover:bg-gray-900/70 hover:border-gray-700 transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-lg font-medium text-white">{example.title}</h4>
-                    <span className="text-sm text-purple-400 font-light">评分 {example.score.overall}/100</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-3">{example.description}</p>
-                  
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">原始提示词：</p>
-                      <p className="text-sm text-gray-300">{example.original}</p>
-                    </div>
-                    
-                    <details className="cursor-pointer">
-                      <summary className="text-sm text-purple-400 hover:text-purple-300 transition-colors">
-                        查看优化版本
-                      </summary>
-                      <div className="mt-2 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
-                        <pre className="text-sm text-gray-300 whitespace-pre-wrap">{example.optimized}</pre>
-                      </div>
-                    </details>
-                    
-                    <div className="flex items-center gap-4 mt-3">
-                      <span className="text-xs text-gray-500">标签：</span>
-                      <div className="flex flex-wrap gap-1">
-                        {example.tags.map((tag, tagIndex) => (
-                          <span
-                            key={tagIndex}
-                            className="px-2 py-0.5 text-xs rounded-full bg-gray-800 border border-gray-700 text-gray-400"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </details>
         
         {/* 重新开始按钮 */}
         <div className="flex justify-center pt-4">
@@ -464,41 +376,11 @@ export default function ClarityOptimizer({ onOptimizationComplete }: ClarityOpti
     <div className="w-full max-w-6xl mx-auto">
       {/* 标题部分 */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-light text-white mb-3">
-          CLARITY 智能提示词优化器
+        <h1 className="text-4xl font-light text-white">
+          智能提示词优化器
         </h1>
-        <p className="text-xl text-gray-400">
-          基于七维优化框架，让您的提示词更专业、更有效
-        </p>
       </div>
       
-      {/* CLARITY框架说明 */}
-      <div className="grid grid-cols-2 md:grid-cols-7 gap-2 mb-8">
-        {[
-          { letter: 'C', word: 'Contextualize', desc: '情境化' },
-          { letter: 'L', word: 'Layer', desc: '层次化' },
-          { letter: 'A', word: 'Amplify', desc: '增强化' },
-          { letter: 'R', word: 'Refine', desc: '精炼化' },
-          { letter: 'I', word: 'Iterate', desc: '迭代化' },
-          { letter: 'T', word: 'Tailor', desc: '定制化' },
-          { letter: 'Y', word: 'Yield', desc: '产出化' }
-        ].map((item, index) => (
-          <div
-            key={index}
-            className="text-center group animate-fade-up"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-gradient-to-br from-purple-600/20 to-blue-600/20 
-                          border border-purple-500/30 flex items-center justify-center 
-                          group-hover:from-purple-600/30 group-hover:to-blue-600/30 transition-all duration-300">
-              <span className="text-xl font-bold text-purple-400">{item.letter}</span>
-            </div>
-            <p className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-              {item.desc}
-            </p>
-          </div>
-        ))}
-      </div>
       
       {/* 主要内容区域 */}
       {!result ? renderInputSection() : renderResults()}

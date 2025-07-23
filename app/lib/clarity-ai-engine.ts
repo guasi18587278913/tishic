@@ -3,7 +3,8 @@
  * 使用AI深度分析和优化提示词
  */
 
-import { getApiProvider } from './api-providers'
+import { APIClient } from './api-client'
+import { ClarityAPIClient } from './clarity-api-client'
 import { ClarityAnalysis, OptimizationScore, OptimizedVersion } from './clarity-optimizer'
 import { TaskType } from '../types/index'
 
@@ -21,7 +22,7 @@ const ANALYSIS_PROMPTS = {
 4. 目标受众：最终产出是给谁看的？
 5. 期望效果：用户期望得到什么样的结果？
 
-请以JSON格式返回分析结果。`,
+请严格以JSON格式返回分析结果，确保返回的是有效的JSON对象。不要包含任何额外的文字说明。`,
 
   // CLARITY七维度分析
   clarityAnalysis: `基于CLARITY框架对以下提示词进行七维度分析：
@@ -72,7 +73,7 @@ const ANALYSIS_PROMPTS = {
    - 验证方法
    - 输出格式要求
 
-请以结构化的JSON格式返回分析结果。`,
+请严格以结构化的JSON格式返回分析结果，确保返回的是有效的JSON对象。不要包含任何额外的文字说明。`,
 
   // 优化版本生成
   optimizationGeneration: `基于以下分析结果，生成三个不同风格的优化版本：
@@ -103,7 +104,20 @@ CLARITY分析结果：{analysis}
 - 保持用户的核心意图
 - 适配目标使用场景
 
-请以JSON格式返回三个优化版本，包括标题、描述、优化后的提示词和优化亮点。`,
+请严格以JSON格式返回结果，格式如下：
+{
+  "versions": [
+    {
+      "id": "version-id", 
+      "title": "版本标题",
+      "description": "版本描述", 
+      "prompt": "优化后的提示词",
+      "highlights": ["亮点1", "亮点2", "亮点3"],
+      "reasoning": "优化理由"
+    }
+  ]
+}
+确保返回有效的JSON对象，不要包含任何额外的文字说明。`,
 
   // 评分计算
   scoreCalculation: `评估以下提示词的质量，从四个维度打分（0-100）：
@@ -117,25 +131,28 @@ CLARITY分析结果：{analysis}
 3. 可执行性（Executability）：是否易于理解和执行、步骤是否明确、可操作性如何
 4. 预期效果（Effectiveness）：预计能否达到目标、输出质量的期望值
 
-请为每个维度打分，并计算总体得分。返回JSON格式的评分结果。`
+请为每个维度打分（0-100），并计算总体得分。严格按以下JSON格式返回：
+{
+  "clarity": 85,
+  "completeness": 80,
+  "executability": 90,
+  "effectiveness": 85,
+  "overall": 85
+}
+确保返回有效的JSON对象，不要包含任何额外的文字说明。`
 }
 
 export class ClarityAIEngine {
-  private apiProvider: any
+  private apiClient: APIClient | ClarityAPIClient
   
   constructor() {
-    // 初始化时就获取API提供者
-    this.initializeProvider()
-  }
-  
-  private async initializeProvider() {
-    this.apiProvider = await getApiProvider()
-  }
-  
-  // 确保API提供者已初始化
-  private async ensureProvider() {
-    if (!this.apiProvider) {
-      await this.initializeProvider()
+    // 根据环境选择合适的API客户端
+    // 在浏览器环境中使用 ClarityAPIClient（通过API路由）
+    // 在服务器环境中使用 APIClient（直接调用）
+    if (typeof window !== 'undefined') {
+      this.apiClient = new ClarityAPIClient()
+    } else {
+      this.apiClient = new APIClient()
     }
   }
   
@@ -147,11 +164,9 @@ export class ClarityAIEngine {
     targetAudience: string
     expectedOutcome: string
   }> {
-    await this.ensureProvider()
-    
     try {
       const prompt = ANALYSIS_PROMPTS.intentAnalysis.replace('{input}', input)
-      const response = await this.apiProvider.generateResponse(prompt, {
+      const response = await this.apiClient.generateResponse(prompt, {
         temperature: 0.3,
         maxTokens: 1000
       })
@@ -183,14 +198,12 @@ export class ClarityAIEngine {
     input: string, 
     taskType: TaskType
   ): Promise<Partial<ClarityAnalysis>> {
-    await this.ensureProvider()
-    
     try {
       const prompt = ANALYSIS_PROMPTS.clarityAnalysis
         .replace('{input}', input)
         .replace('{taskType}', taskType)
       
-      const response = await this.apiProvider.generateResponse(prompt, {
+      const response = await this.apiClient.generateResponse(prompt, {
         temperature: 0.3,
         maxTokens: 2000
       })
@@ -253,14 +266,12 @@ export class ClarityAIEngine {
     input: string,
     analysis: ClarityAnalysis
   ): Promise<OptimizedVersion[]> {
-    await this.ensureProvider()
-    
     try {
       const prompt = ANALYSIS_PROMPTS.optimizationGeneration
         .replace('{input}', input)
         .replace('{analysis}', JSON.stringify(analysis, null, 2))
       
-      const response = await this.apiProvider.generateResponse(prompt, {
+      const response = await this.apiClient.generateResponse(prompt, {
         temperature: 0.7,
         maxTokens: 3000
       })
@@ -312,14 +323,12 @@ export class ClarityAIEngine {
     prompt: string,
     analysis: ClarityAnalysis
   ): Promise<OptimizationScore> {
-    await this.ensureProvider()
-    
     try {
       const scorePrompt = ANALYSIS_PROMPTS.scoreCalculation
         .replace('{prompt}', prompt)
         .replace('{analysis}', JSON.stringify(analysis, null, 2))
       
-      const response = await this.apiProvider.generateResponse(scorePrompt, {
+      const response = await this.apiClient.generateResponse(scorePrompt, {
         temperature: 0.2,
         maxTokens: 500
       })
@@ -343,18 +352,59 @@ export class ClarityAIEngine {
   // 解析AI响应
   private parseAIResponse(response: string): any {
     try {
-      // 尝试提取JSON内容
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      // 首先尝试直接解析
+      try {
+        return JSON.parse(response);
+      } catch (e) {
+        // 继续尝试其他方法
+      }
+
+      // 清理响应中的控制字符
+      const cleanedResponse = response
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // 移除控制字符
+        .replace(/\r\n/g, '\\n') // 替换换行
+        .replace(/\n/g, '\\n')
+        .replace(/\t/g, '\\t');
+      
+      // 尝试找到JSON对象或数组
+      const jsonMatches = cleanedResponse.match(/(\{[^{}]*\{[^{}]*\}[^{}]*\}|\{[^{}]+\}|\[[^\[\]]+\])/g);
+      
+      if (jsonMatches) {
+        // 尝试解析每个匹配的JSON
+        for (const match of jsonMatches) {
+          try {
+            const parsed = JSON.parse(match);
+            if (typeof parsed === 'object' && parsed !== null) {
+              return parsed;
+            }
+          } catch (e) {
+            // 继续尝试下一个匹配
+          }
+        }
       }
       
-      // 如果没有找到JSON，尝试其他解析方法
-      // 这里可以添加更多的解析逻辑
+      // 尝试提取更复杂的JSON结构
+      const complexJsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+      if (complexJsonMatch) {
+        try {
+          // 尝试修复常见的JSON问题
+          let fixedJson = complexJsonMatch[0]
+            .replace(/,\s*}/g, '}') // 移除尾部逗号
+            .replace(/,\s*]/g, ']') // 移除数组尾部逗号
+            .replace(/'/g, '"') // 单引号替换为双引号
+            .replace(/(\w+):/g, '"$1":'); // 给键加引号
+          
+          return JSON.parse(fixedJson);
+        } catch (e) {
+          // 如果还是失败，返回默认值
+        }
+      }
       
+      console.warn('Could not parse AI response as JSON, returning default structure');
       return {}
     } catch (error) {
       console.error('Failed to parse AI response:', error)
+      console.error('Response was:', response)
       return {}
     }
   }
